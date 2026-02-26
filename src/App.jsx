@@ -2196,14 +2196,14 @@ export default function App() {
   const [loaded, setLoaded] = useState(false);
   const t = T[lang]||T.en;
 
-  useEffect(()=>{(async()=>{
-    try{const r=await window.storage.get("rep_props");if(r?.value)setProperties(JSON.parse(r.value));}catch{}
-    try{const r=await window.storage.get("rep_inqs");if(r?.value)setInquiries(JSON.parse(r.value));}catch{}
+  useEffect(()=>{
+    try{const r=localStorage.getItem("rep_props");if(r)setProperties(JSON.parse(r));}catch{}
+    try{const r=localStorage.getItem("rep_inqs");if(r)setInquiries(JSON.parse(r));}catch{}
     setLoaded(true);
-  })();},[]);
+  },[]);
 
-  useEffect(()=>{if(!loaded)return;window.storage.set("rep_props",JSON.stringify(properties)).catch(()=>{});},[properties,loaded]);
-  useEffect(()=>{if(!loaded)return;window.storage.set("rep_inqs",JSON.stringify(inquiries)).catch(()=>{});},[inquiries,loaded]);
+  useEffect(()=>{if(!loaded)return;try{localStorage.setItem("rep_props",JSON.stringify(properties));}catch{}},[properties,loaded]);
+  useEffect(()=>{if(!loaded)return;try{localStorage.setItem("rep_inqs",JSON.stringify(inquiries));}catch{}},[inquiries,loaded]);
 
   const saveProperty = () => {
     const idx = properties.findIndex(p=>p.id===editing.id);
