@@ -53,6 +53,7 @@ const T = {
     heroImages: "Hero Images",
     floorPlan: "Floor Plan",
     galleryImages: "Gallery Images",
+    elevationDrawing: "Elevation Drawing (立面図)",
     uploadImages: "Click or drag to upload",
     agentName: "Agent Name",
     agentContact: "Agent Contact",
@@ -105,6 +106,7 @@ const T = {
     constructionTimeline: "Construction Timeline",
     propertyDetails: "Property Details",
     floorPlanLabel: "Floor Plan",
+    elevationLabel: "Elevation Drawing",
     contactAgent: "Contact Agent",
     viewPresentation: "View Presentation",
     accessTitle: "Access & Location",
@@ -260,6 +262,7 @@ const T = {
     heroImages: "メイン画像",
     floorPlan: "間取り図",
     galleryImages: "ギャラリー画像",
+    elevationDrawing: "立面図",
     uploadImages: "クリックまたはドラッグでアップロード",
     agentName: "担当者名",
     agentContact: "連絡先",
@@ -312,6 +315,7 @@ const T = {
     constructionTimeline: "工程スケジュール",
     propertyDetails: "物件概要",
     floorPlanLabel: "間取り図",
+    elevationLabel: "立面図",
     contactAgent: "担当者に連絡",
     viewPresentation: "プレゼンテーション表示",
     accessTitle: "アクセス",
@@ -461,6 +465,7 @@ const T = {
     heroImages: "主要圖片",
     floorPlan: "平面圖",
     galleryImages: "圖片集",
+    elevationDrawing: "立面圖",
     uploadImages: "點擊或拖拽上傳",
     agentName: "負責人",
     agentContact: "聯絡方式",
@@ -513,6 +518,7 @@ const T = {
     constructionTimeline: "工程時間表",
     propertyDetails: "物業概要",
     floorPlanLabel: "平面圖",
+    elevationLabel: "立面圖",
     contactAgent: "聯絡負責人",
     viewPresentation: "查看展示",
     accessTitle: "交通位置",
@@ -615,8 +621,26 @@ const T = {
 
 const CURRENCIES = { JPY: "¥", USD: "$", HKD: "HK$", TWD: "NT$" };
 const SQM_TO_TSUBO = 0.3025;
-const STRUCTURES = ["Reinforced Concrete (RC)", "Steel Reinforced Concrete (SRC)", "Steel Frame", "Wood Frame (木造)", "2×4 Wood Frame", "Light Steel Frame"];
-const ZONINGS = ["Cat.1 Low-Rise Residential", "Cat.2 Low-Rise Residential", "Cat.1 Mid-Rise Residential", "Cat.2 Mid-Rise Residential", "Cat.1 Residential", "Cat.2 Residential", "Semi-Industrial", "Commercial", "Quasi-Fire Prevention", "Urbanization Control Area"];
+const STRUCTURES = [
+  { en: "Reinforced Concrete (RC)", ja: "鉄筋コンクリート造（RC）" },
+  { en: "Steel Reinforced Concrete (SRC)", ja: "鉄骨鉄筋コンクリート造（SRC）" },
+  { en: "Steel Frame", ja: "鉄骨造（S造）" },
+  { en: "Wood Frame (木造)", ja: "木造" },
+  { en: "2×4 Wood Frame", ja: "2×4工法（ツーバイフォー）" },
+  { en: "Light Steel Frame", ja: "軽量鉄骨造" },
+];
+const ZONINGS = [
+  { en: "Cat.1 Low-Rise Residential", ja: "第一種低層住居専用地域" },
+  { en: "Cat.2 Low-Rise Residential", ja: "第二種低層住居専用地域" },
+  { en: "Cat.1 Mid-Rise Residential", ja: "第一種中高層住居専用地域" },
+  { en: "Cat.2 Mid-Rise Residential", ja: "第二種中高層住居専用地域" },
+  { en: "Cat.1 Residential", ja: "第一種住居地域" },
+  { en: "Cat.2 Residential", ja: "第二種住居地域" },
+  { en: "Semi-Industrial", ja: "準工業地域" },
+  { en: "Commercial", ja: "商業地域" },
+  { en: "Quasi-Fire Prevention", ja: "準防火地域" },
+  { en: "Urbanization Control Area", ja: "市街化調整区域" },
+];
 const STATUSES_PROP = ["Vacant", "Occupied", "Under Construction", "Pre-Construction", "Completed"];
 
 const emptyProperty = () => ({
@@ -630,7 +654,7 @@ const emptyProperty = () => ({
   zoning: "", coverageRatio: "", floorAreaRatio: "", structure: "", currentStatus: "",
   features: "",
   description: { en: "", ja: "", zh: "" },
-  heroImages: [], floorPlan: [], galleryImages: [],
+  heroImages: [], floorPlan: [], galleryImages: [], elevationDrawing: [],
   agentName: "", agentContact: "", companyName: "", licenseNo: "",
   developer: "", constructionCo: "", architect: "",
   completionDate: "", deliveryDate: "", constructionStart: "",
@@ -671,7 +695,7 @@ const emptyProperty = () => ({
 const C = {
   bg: "#0d0b08", bgLight: "#151210", bgCard: "#1a1714", bgInput: "#1e1b17",
   gold: "#c4a470", goldDark: "#a88a56", goldFaint: "rgba(196,164,112,0.15)",
-  text: "#e8e4de", textDim: "rgba(232,228,222,0.5)", textFaint: "rgba(232,228,222,0.25)",
+  text: "#e8e4de", textDim: "rgba(232,228,222,0.7)", textFaint: "rgba(232,228,222,0.45)",
   border: "rgba(196,164,112,0.15)", borderFaint: "rgba(196,164,112,0.08)",
   white: "#f5f0e8", danger: "#c44040", success: "#5a9a62", blue: "#4a8ac4",
 };
@@ -704,12 +728,12 @@ function fmtArea(s) { return s ? `${parseFloat(s).toLocaleString()} ㎡ (${sqmTo
 function getLangVal(obj, lang) { if (!obj) return ""; return obj[lang] || obj.en || obj.ja || obj.zh || ""; }
 
 // ─── Shared Input Styles ───
-const iS = { width:"100%",padding:"10px 14px",background:C.bgInput,border:`1px solid ${C.border}`,borderRadius:6,color:C.text,fontFamily:F.body,fontWeight:300,fontSize:14,outline:"none",boxSizing:"border-box" };
+const iS = { width:"100%",padding:"10px 14px",background:C.bgInput,border:`1px solid ${C.border}`,borderRadius:6,color:C.text,fontFamily:F.body,fontWeight:300,fontSize:16,outline:"none",boxSizing:"border-box" };
 const selS = { ...iS, appearance:"none", cursor:"pointer" };
 
 function Field({ label, children, compact }) {
   return (<div style={{ marginBottom: compact ? 10 : 16 }}>
-    <div style={{ fontSize:11,fontFamily:F.body,fontWeight:500,letterSpacing:1,color:C.gold,marginBottom:6,textTransform:"uppercase" }}>{label}</div>
+    <div style={{ fontSize:13,fontFamily:F.body,fontWeight:500,letterSpacing:1,color:C.gold,marginBottom:6,textTransform:"uppercase" }}>{label}</div>
     {children}
   </div>);
 }
@@ -720,7 +744,7 @@ function TriField({ label, value, onChange, placeholder, textarea }) {
   return (<Field label={label}>
     <div style={{ display:"flex",gap:2,marginBottom:6 }}>
       {[["en","EN"],["ja","日本語"],["zh","中文"]].map(([k,l])=>(
-        <button key={k} onClick={()=>setTab(k)} style={{ padding:"4px 12px",fontSize:10,fontFamily:F.body,fontWeight:tab===k?500:300,background:tab===k?C.gold:"transparent",color:tab===k?C.bg:C.textDim,border:`1px solid ${tab===k?C.gold:C.border}`,borderRadius:4,cursor:"pointer" }}>{l}{value?.[k]?" ●":""}</button>
+        <button key={k} onClick={()=>setTab(k)} style={{ padding:"4px 12px",fontSize:12,fontFamily:F.body,fontWeight:tab===k?500:300,background:tab===k?C.gold:"transparent",color:tab===k?C.bg:C.textDim,border:`1px solid ${tab===k?C.gold:C.border}`,borderRadius:4,cursor:"pointer" }}>{l}{value?.[k]?" ●":""}</button>
       ))}
     </div>
     <El style={{ ...iS,...(textarea?{minHeight:80,resize:"vertical"}:{}) }} value={value?.[tab]||""} onChange={e=>onChange({...value,[tab]:e.target.value})} placeholder={placeholder} />
@@ -734,15 +758,15 @@ function ImageUpload({ images, onChange, label, multiple=true }) {
     Promise.all(ps).then(ni => onChange(multiple ? [...images,...ni] : ni.slice(0,1)));
   };
   return (<div>
-    <div style={{ fontSize:11,fontFamily:F.body,fontWeight:500,letterSpacing:1,color:C.gold,marginBottom:8,textTransform:"uppercase" }}>{label}</div>
+    <div style={{ fontSize:13,fontFamily:F.body,fontWeight:500,letterSpacing:1,color:C.gold,marginBottom:8,textTransform:"uppercase" }}>{label}</div>
     <div onClick={()=>ref.current?.click()} onDragOver={e=>{e.preventDefault();}} onDrop={e=>{e.preventDefault();handle(e.dataTransfer.files);}}
       style={{ border:`1px dashed ${C.border}`,borderRadius:8,padding:20,textAlign:"center",cursor:"pointer",background:"rgba(196,164,112,0.03)",minHeight:80 }}>
       <input ref={ref} type="file" accept="image/*" multiple={multiple} style={{display:"none"}} onChange={e=>handle(e.target.files)} />
-      {images.length===0 ? <div style={{color:C.textDim,fontSize:13,fontFamily:F.body,fontWeight:300}}><div style={{fontSize:24,marginBottom:6,opacity:0.4}}>+</div>Click or drag to upload</div>
+      {images.length===0 ? <div style={{color:C.textDim,fontSize:15,fontFamily:F.body,fontWeight:300}}><div style={{fontSize:26,marginBottom:6,opacity:0.4}}>+</div>Click or drag to upload</div>
       : <div style={{display:"flex",flexWrap:"wrap",gap:8,justifyContent:"center"}}>
           {images.map((img,i)=>(<div key={i} style={{position:"relative"}}><img src={img.data} alt="" style={{width:80,height:60,objectFit:"cover",borderRadius:4}} />
-            <button onClick={e=>{e.stopPropagation();onChange(images.filter((_,j)=>j!==i));}} style={{position:"absolute",top:-6,right:-6,width:18,height:18,borderRadius:9,background:C.danger,color:"#fff",border:"none",cursor:"pointer",fontSize:10,display:"flex",alignItems:"center",justifyContent:"center"}}>×</button></div>))}
-          <div style={{width:80,height:60,border:`1px dashed ${C.border}`,borderRadius:4,display:"flex",alignItems:"center",justifyContent:"center",color:C.textDim,fontSize:20}}>+</div>
+            <button onClick={e=>{e.stopPropagation();onChange(images.filter((_,j)=>j!==i));}} style={{position:"absolute",top:-6,right:-6,width:18,height:18,borderRadius:9,background:C.danger,color:"#fff",border:"none",cursor:"pointer",fontSize:12,display:"flex",alignItems:"center",justifyContent:"center"}}>×</button></div>))}
+          <div style={{width:80,height:60,border:`1px dashed ${C.border}`,borderRadius:4,display:"flex",alignItems:"center",justifyContent:"center",color:C.textDim,fontSize:22}}>+</div>
         </div>}
     </div>
   </div>);
@@ -1013,9 +1037,9 @@ Focus on lifestyle benefits, location advantages, investment potential, and uniq
     );
   };
 
-  const chipS = (active) => ({padding:"5px 14px",fontSize:11,fontFamily:F.body,fontWeight:active?500:300,color:active?C.bg:C.textDim,background:active?C.gold:"transparent",border:`1px solid ${active?C.gold:C.border}`,borderRadius:4,cursor:"pointer"});
-  const miniInput = {...iS, padding:"6px 10px",fontSize:12};
-  const miniLabel = {fontSize:9,letterSpacing:1.5,textTransform:"uppercase",color:C.textFaint,fontFamily:F.body,fontWeight:300,marginBottom:4};
+  const chipS = (active) => ({padding:"5px 14px",fontSize:13,fontFamily:F.body,fontWeight:active?500:300,color:active?C.bg:C.textDim,background:active?C.gold:"transparent",border:`1px solid ${active?C.gold:C.border}`,borderRadius:4,cursor:"pointer"});
+  const miniInput = {...iS, padding:"6px 10px",fontSize:14};
+  const miniLabel = {fontSize:11,letterSpacing:1.5,textTransform:"uppercase",color:C.textFaint,fontFamily:F.body,fontWeight:300,marginBottom:4};
 
   return (
     <div>
@@ -1034,8 +1058,8 @@ Focus on lifestyle benefits, location advantages, investment potential, and uniq
       {/* Comparable search with filters */}
       <div style={{marginTop:28,padding:24,background:C.bgCard,borderRadius:8,border:`1px solid ${C.borderFaint}`}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
-          <div style={{fontSize:10,letterSpacing:2,textTransform:"uppercase",color:C.gold,fontFamily:F.body,fontWeight:300}}>{isRental ? t.findComparableRents : t.findComparableSales}</div>
-          <div onClick={()=>setShowFilters(!showFilters)} style={{fontSize:11,fontFamily:F.body,fontWeight:400,color:C.gold,cursor:"pointer"}}>{showFilters ? "▲ " : "▼ "}{lang==="ja"?"検索条件":lang==="zh"?"搜尋條件":"Search Filters"}</div>
+          <div style={{fontSize:12,letterSpacing:2,textTransform:"uppercase",color:C.gold,fontFamily:F.body,fontWeight:300}}>{isRental ? t.findComparableRents : t.findComparableSales}</div>
+          <div onClick={()=>setShowFilters(!showFilters)} style={{fontSize:13,fontFamily:F.body,fontWeight:400,color:C.gold,cursor:"pointer"}}>{showFilters ? "▲ " : "▼ "}{lang==="ja"?"検索条件":lang==="zh"?"搜尋條件":"Search Filters"}</div>
         </div>
 
         {showFilters && (<div style={{marginBottom:20}}>
@@ -1113,9 +1137,9 @@ Focus on lifestyle benefits, location advantages, investment potential, and uniq
         </div>)}
 
         {goldBtn(searchComps, loadingComps ? (compStatus || t.generating) : (lang==="ja"?"🔍 相場検索":lang==="zh"?"🔍 搜尋行情":"🔍 Search Comparables"), loadingComps)}
-        {loadingComps && compStatus && <div style={{fontSize:11,fontFamily:F.body,fontWeight:300,color:C.textDim,marginTop:8,fontStyle:"italic"}}>{compStatus}</div>}
-        {!cf.area && !loadingComps && <div style={{fontSize:11,fontFamily:F.body,fontWeight:300,color:C.danger,marginTop:8}}>{lang==="ja"?"エリアを入力してください":"Please enter a search area"}</div>}
-        {aiError && <div style={{marginTop:10,padding:"10px 14px",background:"rgba(196,64,64,0.1)",border:`1px solid rgba(196,64,64,0.3)`,borderRadius:6,fontSize:11,fontFamily:F.body,fontWeight:300,color:"#e88",lineHeight:1.5,wordBreak:"break-all"}}><strong>Error:</strong> {aiError}</div>}
+        {loadingComps && compStatus && <div style={{fontSize:13,fontFamily:F.body,fontWeight:300,color:C.textDim,marginTop:8,fontStyle:"italic"}}>{compStatus}</div>}
+        {!cf.area && !loadingComps && <div style={{fontSize:13,fontFamily:F.body,fontWeight:300,color:C.danger,marginTop:8}}>{lang==="ja"?"エリアを入力してください":"Please enter a search area"}</div>}
+        {aiError && <div style={{marginTop:10,padding:"10px 14px",background:"rgba(196,64,64,0.1)",border:`1px solid rgba(196,64,64,0.3)`,borderRadius:6,fontSize:13,fontFamily:F.body,fontWeight:300,color:"#e88",lineHeight:1.5,wordBreak:"break-all"}}><strong>Error:</strong> {aiError}</div>}
       </div>
 
       {/* Comps */}
@@ -1127,7 +1151,7 @@ Focus on lifestyle benefits, location advantages, investment potential, and uniq
             <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: C.gold, fontFamily: F.body, fontWeight: 300 }}>{isRental ? t.comparableRents : t.comparableSales}</div>
             <div style={{ display: "flex", gap: 4 }}>
               {[["en","EN"],["ja","日本語"],["zh","中文"]].map(([k,l])=>(
-                <span key={k} onClick={()=>setCompLang(k)} style={{padding:"3px 10px",fontSize:10,fontFamily:F.body,fontWeight:compLang===k?500:300,color:compLang===k?C.bg:C.textDim,background:compLang===k?C.gold:"transparent",border:`1px solid ${compLang===k?C.gold:C.borderFaint}`,borderRadius:3,cursor:"pointer"}}>{l}</span>
+                <span key={k} onClick={()=>setCompLang(k)} style={{padding:"3px 10px",fontSize:12,fontFamily:F.body,fontWeight:compLang===k?500:300,color:compLang===k?C.bg:C.textDim,background:compLang===k?C.gold:"transparent",border:`1px solid ${compLang===k?C.gold:C.borderFaint}`,borderRadius:3,cursor:"pointer"}}>{l}</span>
               ))}
             </div>
           </div>
@@ -1143,7 +1167,7 @@ Focus on lifestyle benefits, location advantages, investment potential, and uniq
                   <div>
                     <div style={{ fontSize: 13, fontFamily: F.body, fontWeight: 400, color: C.text }}>{cName}</div>
                     <div style={{ fontSize: 11, fontFamily: F.body, fontWeight: 200, color: C.textFaint }}>{cLoc}</div>
-                    {cType && <span style={{fontSize:9,fontFamily:F.body,fontWeight:400,color:C.gold,background:"rgba(196,164,112,0.1)",padding:"1px 6px",borderRadius:2,marginTop:3,display:"inline-block"}}>{cType}</span>}
+                    {cType && <span style={{fontSize:11,fontFamily:F.body,fontWeight:400,color:C.gold,background:"rgba(196,164,112,0.1)",padding:"1px 6px",borderRadius:2,marginTop:3,display:"inline-block"}}>{cType}</span>}
                   </div>
                   <div style={{ fontSize: 15, fontFamily: F.accent, fontWeight: 600, color: C.gold }}>{comp.rent || comp.price || "—"}</div>
                   <div style={{ fontSize: 12, fontFamily: F.body, fontWeight: 300, color: C.textDim }}>{comp.size}</div>
@@ -1408,7 +1432,7 @@ Provide realistic coordinates near the given location. Include 8-15 landmarks.` 
 
       {p.lat && p.lng && <div style={{ fontSize: 10, fontFamily: F.body, fontWeight: 200, color: C.textFaint, marginBottom: 8, fontStyle: "italic" }}>💡 {t.mapDragHint}</div>}
 
-      {mapError && <div style={{marginBottom:12,padding:"10px 14px",background:"rgba(196,64,64,0.1)",border:"1px solid rgba(196,64,64,0.3)",borderRadius:6,fontSize:11,fontFamily:F.body,fontWeight:300,color:"#e88",lineHeight:1.5}}>{mapError}</div>}
+      {mapError && <div style={{marginBottom:12,padding:"10px 14px",background:"rgba(196,64,64,0.1)",border:"1px solid rgba(196,64,64,0.3)",borderRadius:6,fontSize:13,fontFamily:F.body,fontWeight:300,color:"#e88",lineHeight:1.5}}>{mapError}</div>}
 
       {/* Map container */}
       <div ref={mapRef} style={{ width: "100%", height: 360, borderRadius: 8, border: `1px solid ${C.border}`, marginBottom: 20, background: "#f0ebe3" }}>
@@ -1613,12 +1637,12 @@ function PresentationView({ property: p, lang, onInterest }) {
         {heroImg && <div style={{position:"absolute",inset:0,background:"linear-gradient(to top,#0d0b08,rgba(13,11,8,0.5) 40%,rgba(13,11,8,0.2))"}} />}
         <div style={{position:"absolute",top:32,left:40,right:40,display:"flex",justifyContent:"space-between",alignItems:"center",zIndex:2}}>
           <CMPLogo width={80} />
-          <div style={{fontSize:11,letterSpacing:3,textTransform:"uppercase",color:C.textFaint,fontFamily:F.body,fontWeight:200}}>{typeLabel}</div>
+          <div style={{fontSize:13,letterSpacing:3,textTransform:"uppercase",color:C.textFaint,fontFamily:F.body,fontWeight:200}}>{typeLabel}</div>
         </div>
         <div style={{position:"absolute",bottom:48,left:40,zIndex:2,maxWidth:"60%"}}>
-          <div style={{fontSize:13,letterSpacing:5,textTransform:"uppercase",color:C.gold,fontFamily:F.body,fontWeight:300,marginBottom:14}}>{loc.split(",").slice(-2).join(" · ").trim()||"Location"}</div>
-          <h1 style={{fontSize:42,fontWeight:400,lineHeight:1.12,margin:0,fontStyle:"italic",color:C.white}}>{nm||"Property Name"}</h1>
-          {nmSub && <div style={{fontSize:17,fontFamily:F.accent,fontWeight:300,color:C.textDim,marginTop:8,letterSpacing:1}}>{nmSub}</div>}
+          <div style={{fontSize:15,letterSpacing:5,textTransform:"uppercase",color:C.gold,fontFamily:F.body,fontWeight:300,marginBottom:14}}>{loc.split(",").slice(-2).join(" · ").trim()||"Location"}</div>
+          <h1 style={{fontSize:44,fontWeight:400,lineHeight:1.12,margin:0,fontStyle:"italic",color:C.white}}>{nm||"Property Name"}</h1>
+          {nmSub && <div style={{fontSize:19,fontFamily:F.accent,fontWeight:300,color:C.textDim,marginTop:8,letterSpacing:1}}>{nmSub}</div>}
         </div>
       </div>
 
@@ -1626,18 +1650,18 @@ function PresentationView({ property: p, lang, onInterest }) {
       <div style={{padding:"28px 40px",display:"flex",alignItems:"baseline",gap:20,borderBottom:`1px solid ${C.borderFaint}`,background:"linear-gradient(180deg,rgba(196,164,112,0.04),transparent)",flexWrap:"wrap"}}>
         {isRental ? (
           <>
-            <span style={{fontSize:34,fontWeight:700,color:C.gold,fontFamily:F.accent}}>{fmtPrice(p.monthlyRent,"JPY")}</span>
-            <span style={{fontSize:16,fontFamily:F.body,fontWeight:200,color:C.textDim}}>{t.perMonth}</span>
+            <span style={{fontSize:36,fontWeight:700,color:C.gold,fontFamily:F.accent}}>{fmtPrice(p.monthlyRent,"JPY")}</span>
+            <span style={{fontSize:18,fontFamily:F.body,fontWeight:200,color:C.textDim}}>{t.perMonth}</span>
           </>
         ) : (
-          <span style={{fontSize:34,fontWeight:700,color:C.gold,fontFamily:F.accent}}>{fmtPrice(p.price,p.currency)||"Price TBD"}</span>
+          <span style={{fontSize:36,fontWeight:700,color:C.gold,fontFamily:F.accent}}>{fmtPrice(p.price,p.currency)||"Price TBD"}</span>
         )}
         <div style={{flex:1}} />
         <div style={{display:"flex",gap:36}}>
-          {isBuilding && p.totalFloors && <div style={{textAlign:"center"}}><div style={{fontSize:24,fontFamily:F.accent,fontWeight:600,color:C.white}}>{p.totalFloors}</div><div style={{fontSize:9,letterSpacing:2,textTransform:"uppercase",color:C.textFaint,fontFamily:F.body,fontWeight:200}}>{lang==="ja"?"階":lang==="zh"?"層":"Floors"}</div></div>}
-          {isBuilding && p.bedrooms && <div style={{textAlign:"center"}}><div style={{fontSize:24,fontFamily:F.accent,fontWeight:600,color:C.white}}>{p.bedrooms}</div><div style={{fontSize:9,letterSpacing:2,textTransform:"uppercase",color:C.textFaint,fontFamily:F.body,fontWeight:200}}>{lang==="ja"?"区画":lang==="zh"?"單位":"Units"}</div></div>}
-          {!isBuilding && p.bedrooms && <div style={{textAlign:"center"}}><div style={{fontSize:24,fontFamily:F.accent,fontWeight:600,color:C.white}}>{p.bedrooms}</div><div style={{fontSize:9,letterSpacing:2,textTransform:"uppercase",color:C.textFaint,fontFamily:F.body,fontWeight:200}}>{t.bedrooms}</div></div>}
-          {!isBuilding && p.bathrooms && <div style={{textAlign:"center"}}><div style={{fontSize:24,fontFamily:F.accent,fontWeight:600,color:C.white}}>{p.bathrooms}</div><div style={{fontSize:9,letterSpacing:2,textTransform:"uppercase",color:C.textFaint,fontFamily:F.body,fontWeight:200}}>{t.bathrooms}</div></div>}
+          {isBuilding && p.totalFloors && <div style={{textAlign:"center"}}><div style={{fontSize:26,fontFamily:F.accent,fontWeight:600,color:C.white}}>{p.totalFloors}</div><div style={{fontSize:11,letterSpacing:2,textTransform:"uppercase",color:C.textFaint,fontFamily:F.body,fontWeight:200}}>{lang==="ja"?"階":lang==="zh"?"層":"Floors"}</div></div>}
+          {isBuilding && p.bedrooms && <div style={{textAlign:"center"}}><div style={{fontSize:26,fontFamily:F.accent,fontWeight:600,color:C.white}}>{p.bedrooms}</div><div style={{fontSize:11,letterSpacing:2,textTransform:"uppercase",color:C.textFaint,fontFamily:F.body,fontWeight:200}}>{lang==="ja"?"区画":lang==="zh"?"單位":"Units"}</div></div>}
+          {!isBuilding && p.bedrooms && <div style={{textAlign:"center"}}><div style={{fontSize:26,fontFamily:F.accent,fontWeight:600,color:C.white}}>{p.bedrooms}</div><div style={{fontSize:11,letterSpacing:2,textTransform:"uppercase",color:C.textFaint,fontFamily:F.body,fontWeight:200}}>{t.bedrooms}</div></div>}
+          {!isBuilding && p.bathrooms && <div style={{textAlign:"center"}}><div style={{fontSize:26,fontFamily:F.accent,fontWeight:600,color:C.white}}>{p.bathrooms}</div><div style={{fontSize:11,letterSpacing:2,textTransform:"uppercase",color:C.textFaint,fontFamily:F.body,fontWeight:200}}>{t.bathrooms}</div></div>}
         </div>
       </div>
 
@@ -1646,8 +1670,8 @@ function PresentationView({ property: p, lang, onInterest }) {
         <div style={{padding:"20px 40px",display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:20,borderBottom:`1px solid ${C.borderFaint}`}}>
           {[[t.depositLabel,p.deposit],[t.keyMoneyLabel,p.keyMoney],[t.mgmtFeeLabel,p.managementFee?`¥${parseInt(p.managementFee).toLocaleString()}`:""],[t.leaseLabel,p.leaseTerm]].filter(([,v])=>v).map(([l,v])=>(
             <div key={l} style={{textAlign:"center"}}>
-              <div style={{fontSize:16,fontFamily:F.accent,fontWeight:500,color:C.white}}>{v}</div>
-              <div style={{fontSize:9,letterSpacing:2,textTransform:"uppercase",color:C.textFaint,fontFamily:F.body,fontWeight:200,marginTop:2}}>{l}</div>
+              <div style={{fontSize:18,fontFamily:F.accent,fontWeight:500,color:C.white}}>{v}</div>
+              <div style={{fontSize:11,letterSpacing:2,textTransform:"uppercase",color:C.textFaint,fontFamily:F.body,fontWeight:200,marginTop:2}}>{l}</div>
             </div>
           ))}
         </div>
@@ -1656,22 +1680,22 @@ function PresentationView({ property: p, lang, onInterest }) {
       {/* Catch copy */}
       {catchCopy && (
         <div style={{padding:"32px 40px",borderBottom:`1px solid ${C.borderFaint}`}}>
-          <p style={{fontSize:20,fontFamily:F.accent,fontWeight:500,lineHeight:1.6,color:C.gold,margin:0,fontStyle:"italic",maxWidth:700}}>{catchCopy}</p>
+          <p style={{fontSize:22,fontFamily:F.accent,fontWeight:500,lineHeight:1.6,color:C.gold,margin:0,fontStyle:"italic",maxWidth:700}}>{catchCopy}</p>
         </div>
       )}
 
       {/* Description */}
       {desc && (
         <div style={{padding:"28px 40px",borderBottom:`1px solid ${C.borderFaint}`}}>
-          <p style={{fontSize:15,fontFamily:F.accent,fontWeight:300,lineHeight:1.8,color:C.text,margin:0,maxWidth:700}}>{desc}</p>
+          <p style={{fontSize:17,fontFamily:F.accent,fontWeight:300,lineHeight:1.8,color:C.text,margin:0,maxWidth:700}}>{desc}</p>
         </div>
       )}
 
       {/* Selling points */}
       {sellingPts && (
         <div style={{padding:"28px 40px",borderBottom:`1px solid ${C.borderFaint}`}}>
-          <div style={{fontSize:10,letterSpacing:3,textTransform:"uppercase",color:C.gold,fontFamily:F.body,fontWeight:300,marginBottom:16}}>{t.sellingPoints}</div>
-          <div style={{fontSize:14,fontFamily:F.accent,fontWeight:400,lineHeight:2,color:C.text,whiteSpace:"pre-wrap",maxWidth:700}}>{sellingPts}</div>
+          <div style={{fontSize:12,letterSpacing:3,textTransform:"uppercase",color:C.gold,fontFamily:F.body,fontWeight:300,marginBottom:16}}>{t.sellingPoints}</div>
+          <div style={{fontSize:16,fontFamily:F.accent,fontWeight:400,lineHeight:2,color:C.text,whiteSpace:"pre-wrap",maxWidth:700}}>{sellingPts}</div>
         </div>
       )}
 
@@ -1704,8 +1728,8 @@ function PresentationView({ property: p, lang, onInterest }) {
           ]:[]),
         ].filter(([,v])=>v).map(([label,val])=>(
           <div key={label} style={{borderBottom:`1px solid ${C.borderFaint}`,paddingBottom:16}}>
-            <div style={{fontSize:10,letterSpacing:2.5,textTransform:"uppercase",color:`${C.gold}99`,fontFamily:F.body,fontWeight:300,marginBottom:6}}>{label}</div>
-            <div style={{fontSize:16,fontFamily:F.accent,fontWeight:400,color:C.text}}>{val}</div>
+            <div style={{fontSize:12,letterSpacing:2.5,textTransform:"uppercase",color:`${C.gold}99`,fontFamily:F.body,fontWeight:300,marginBottom:6}}>{label}</div>
+            <div style={{fontSize:18,fontFamily:F.accent,fontWeight:400,color:C.text}}>{val}</div>
           </div>
         ))}
       </div>
@@ -1713,12 +1737,12 @@ function PresentationView({ property: p, lang, onInterest }) {
       {/* Floor Breakdown (Building type) */}
       {isBuilding && p.floors?.length > 0 && (
         <div style={{padding:"28px 40px",borderTop:`1px solid ${C.borderFaint}`}}>
-          <div style={{fontSize:10,letterSpacing:3,textTransform:"uppercase",color:C.gold,fontFamily:F.body,fontWeight:300,marginBottom:20}}>{lang==="ja"?"フロア構成":lang==="zh"?"樓層配置":"Floor Breakdown"}</div>
+          <div style={{fontSize:12,letterSpacing:3,textTransform:"uppercase",color:C.gold,fontFamily:F.body,fontWeight:300,marginBottom:20}}>{lang==="ja"?"フロア構成":lang==="zh"?"樓層配置":"Floor Breakdown"}</div>
           <div style={{overflowX:"auto"}}>
             <table style={{width:"100%",borderCollapse:"collapse",fontFamily:F.body}}>
               <thead><tr>
                 {[lang==="ja"?"階":lang==="zh"?"樓":"Floor",lang==="ja"?"号室":"Unit",lang==="ja"?"面積":"Area",lang==="ja"?"面積 (坪)":"Tsubo",lang==="ja"?"用途":lang==="zh"?"用途":"Usage"].map(h=>(
-                  <th key={h} style={{textAlign:"left",padding:"8px 12px",fontSize:9,letterSpacing:2,textTransform:"uppercase",color:C.textFaint,fontWeight:300,borderBottom:`1px solid ${C.border}`}}>{h}</th>
+                  <th key={h} style={{textAlign:"left",padding:"8px 12px",fontSize:11,letterSpacing:2,textTransform:"uppercase",color:C.textFaint,fontWeight:300,borderBottom:`1px solid ${C.border}`}}>{h}</th>
                 ))}
               </tr></thead>
               <tbody>
@@ -1727,32 +1751,32 @@ function PresentationView({ property: p, lang, onInterest }) {
                   const floorArea = flUnits.reduce((s,u) => s + (parseFloat(u.area)||0), 0);
                   if (flUnits.length === 0) {
                     return (<tr key={fi} style={{borderBottom:`1px solid ${C.borderFaint}`}}>
-                      <td style={{padding:"10px 12px",fontSize:14,fontFamily:F.accent,fontWeight:500,color:C.white}}>{fl.label}</td>
-                      <td style={{padding:"10px 12px",fontSize:13,fontWeight:300,color:C.textDim}}>—</td>
-                      <td style={{padding:"10px 12px",fontSize:13,fontWeight:300,color:C.text}}>—</td>
-                      <td style={{padding:"10px 12px",fontSize:13,fontWeight:300,color:C.textDim}}>—</td>
-                      <td style={{padding:"10px 12px",fontSize:12,fontWeight:300,color:C.textDim}}>{fl.usage}</td>
+                      <td style={{padding:"10px 12px",fontSize:16,fontFamily:F.accent,fontWeight:500,color:C.white}}>{fl.label}</td>
+                      <td style={{padding:"10px 12px",fontSize:15,fontWeight:300,color:C.textDim}}>—</td>
+                      <td style={{padding:"10px 12px",fontSize:15,fontWeight:300,color:C.text}}>—</td>
+                      <td style={{padding:"10px 12px",fontSize:15,fontWeight:300,color:C.textDim}}>—</td>
+                      <td style={{padding:"10px 12px",fontSize:14,fontWeight:300,color:C.textDim}}>{fl.usage}</td>
                     </tr>);
                   }
                   return flUnits.map((u,ui) => (
                     <tr key={`${fi}-${ui}`} style={{borderBottom:ui===flUnits.length-1?`1px solid ${C.border}`:`1px solid ${C.borderFaint}`}}>
-                      {ui===0 ? <td rowSpan={flUnits.length} style={{padding:"10px 12px",fontSize:14,fontFamily:F.accent,fontWeight:500,color:C.white,verticalAlign:"top",borderRight:`1px solid ${C.borderFaint}`}}>
+                      {ui===0 ? <td rowSpan={flUnits.length} style={{padding:"10px 12px",fontSize:16,fontFamily:F.accent,fontWeight:500,color:C.white,verticalAlign:"top",borderRight:`1px solid ${C.borderFaint}`}}>
                         <div>{fl.label}</div>
-                        <div style={{fontSize:10,fontFamily:F.body,fontWeight:300,color:C.textFaint,marginTop:4}}>{flUnits.length} {lang==="ja"?"区画":"units"}</div>
-                        <div style={{fontSize:11,fontFamily:F.accent,fontWeight:600,color:C.gold,marginTop:2}}>{floorArea.toLocaleString()} ㎡</div>
+                        <div style={{fontSize:12,fontFamily:F.body,fontWeight:300,color:C.textFaint,marginTop:4}}>{flUnits.length} {lang==="ja"?"区画":"units"}</div>
+                        <div style={{fontSize:13,fontFamily:F.accent,fontWeight:600,color:C.gold,marginTop:2}}>{floorArea.toLocaleString()} ㎡</div>
                       </td> : null}
-                      <td style={{padding:"8px 12px",fontSize:13,fontWeight:400,color:C.text}}>{u.name||`${fl.label}-${ui+1}`}</td>
-                      <td style={{padding:"8px 12px",fontSize:13,fontWeight:300,color:C.text}}>{u.area ? `${parseFloat(u.area).toLocaleString()} ㎡` : "—"}</td>
-                      <td style={{padding:"8px 12px",fontSize:13,fontWeight:300,color:C.textDim}}>{u.area ? sqmToTsubo(u.area) : "—"}</td>
-                      <td style={{padding:"8px 12px",fontSize:12,fontWeight:300,color:C.textDim}}>{u.usage||fl.usage}</td>
+                      <td style={{padding:"8px 12px",fontSize:15,fontWeight:400,color:C.text}}>{u.name||`${fl.label}-${ui+1}`}</td>
+                      <td style={{padding:"8px 12px",fontSize:15,fontWeight:300,color:C.text}}>{u.area ? `${parseFloat(u.area).toLocaleString()} ㎡` : "—"}</td>
+                      <td style={{padding:"8px 12px",fontSize:15,fontWeight:300,color:C.textDim}}>{u.area ? sqmToTsubo(u.area) : "—"}</td>
+                      <td style={{padding:"8px 12px",fontSize:14,fontWeight:300,color:C.textDim}}>{u.usage||fl.usage}</td>
                     </tr>
                   ));
                 })}
                 <tr style={{borderTop:`2px solid ${C.border}`}}>
-                  <td style={{padding:"10px 12px",fontSize:12,fontFamily:F.body,fontWeight:500,color:C.gold,letterSpacing:1}}>TOTAL</td>
-                  <td style={{padding:"10px 12px",fontSize:12,fontWeight:500,color:C.white}}>{(p.floors||[]).reduce((s,f)=>s+(f.units||[]).length,0)} {lang==="ja"?"区画":"units"}</td>
-                  <td style={{padding:"10px 12px",fontSize:13,fontWeight:500,color:C.white}}>{(p.floors||[]).reduce((s,f)=>s+(f.units||[]).reduce((s2,u)=>s2+(parseFloat(u.area)||0),0),0).toLocaleString()} ㎡</td>
-                  <td style={{padding:"10px 12px",fontSize:13,fontWeight:300,color:C.textDim}}>{((p.floors||[]).reduce((s,f)=>s+(f.units||[]).reduce((s2,u)=>s2+(parseFloat(u.area)||0),0),0)*SQM_TO_TSUBO).toFixed(1)}</td>
+                  <td style={{padding:"10px 12px",fontSize:14,fontFamily:F.body,fontWeight:500,color:C.gold,letterSpacing:1}}>TOTAL</td>
+                  <td style={{padding:"10px 12px",fontSize:14,fontWeight:500,color:C.white}}>{(p.floors||[]).reduce((s,f)=>s+(f.units||[]).length,0)} {lang==="ja"?"区画":"units"}</td>
+                  <td style={{padding:"10px 12px",fontSize:15,fontWeight:500,color:C.white}}>{(p.floors||[]).reduce((s,f)=>s+(f.units||[]).reduce((s2,u)=>s2+(parseFloat(u.area)||0),0),0).toLocaleString()} ㎡</td>
+                  <td style={{padding:"10px 12px",fontSize:15,fontWeight:300,color:C.textDim}}>{((p.floors||[]).reduce((s,f)=>s+(f.units||[]).reduce((s2,u)=>s2+(parseFloat(u.area)||0),0),0)*SQM_TO_TSUBO).toFixed(1)}</td>
                   <td></td>
                 </tr>
               </tbody>
@@ -1764,7 +1788,7 @@ function PresentationView({ property: p, lang, onInterest }) {
       {/* Investment Metrics (Building type) */}
       {isBuilding && (p.annualIncome||p.noi||p.capRate||p.occupancyRate) && (
         <div style={{padding:"28px 40px",borderTop:`1px solid ${C.borderFaint}`}}>
-          <div style={{fontSize:10,letterSpacing:3,textTransform:"uppercase",color:C.gold,fontFamily:F.body,fontWeight:300,marginBottom:20}}>{lang==="ja"?"投資指標":lang==="zh"?"投資指標":"Investment Metrics"}</div>
+          <div style={{fontSize:12,letterSpacing:3,textTransform:"uppercase",color:C.gold,fontFamily:F.body,fontWeight:300,marginBottom:20}}>{lang==="ja"?"投資指標":lang==="zh"?"投資指標":"Investment Metrics"}</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:20}}>
             {[
               [lang==="ja"?"年間総収入":"Annual Income", p.annualIncome ? `¥${parseInt(p.annualIncome).toLocaleString()}` : ""],
@@ -1773,8 +1797,8 @@ function PresentationView({ property: p, lang, onInterest }) {
               [lang==="ja"?"稼働率":"Occupancy", p.occupancyRate ? `${p.occupancyRate}%` : ""],
             ].filter(([,v])=>v).map(([l,v])=>(
               <div key={l} style={{textAlign:"center"}}>
-                <div style={{fontSize:20,fontFamily:F.accent,fontWeight:600,color:C.gold}}>{v}</div>
-                <div style={{fontSize:9,letterSpacing:2,textTransform:"uppercase",color:C.textFaint,fontFamily:F.body,fontWeight:200,marginTop:4}}>{l}</div>
+                <div style={{fontSize:22,fontFamily:F.accent,fontWeight:600,color:C.gold}}>{v}</div>
+                <div style={{fontSize:11,letterSpacing:2,textTransform:"uppercase",color:C.textFaint,fontFamily:F.body,fontWeight:200,marginTop:4}}>{l}</div>
               </div>
             ))}
           </div>
@@ -1784,10 +1808,10 @@ function PresentationView({ property: p, lang, onInterest }) {
       {/* Access */}
       {(p.nearestStation?.[lang]||p.nearestStation?.en||p.nearestAttraction?.[lang]||p.nearestAttraction?.en||p.airportAccess?.[lang]||p.airportAccess?.en) && (
         <div style={{padding:"8px 40px 32px"}}>
-          <div style={{fontSize:10,letterSpacing:3,textTransform:"uppercase",color:C.gold,fontFamily:F.body,fontWeight:300,marginBottom:20}}>{t.accessTitle}</div>
+          <div style={{fontSize:12,letterSpacing:3,textTransform:"uppercase",color:C.gold,fontFamily:F.body,fontWeight:300,marginBottom:20}}>{t.accessTitle}</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:20}}>
             {[[t.nearestStation,getLangVal(p.nearestStation,lang)],[t.nearestAttraction,getLangVal(p.nearestAttraction,lang)],[t.airportAccess,getLangVal(p.airportAccess,lang)]].filter(([,v])=>v).map(([l,v])=>(
-              <div key={l}><div style={{fontSize:10,letterSpacing:1.5,textTransform:"uppercase",color:C.textFaint,fontFamily:F.body,fontWeight:300,marginBottom:6}}>{l}</div><div style={{fontSize:14,fontFamily:F.accent,fontWeight:400,color:C.text,lineHeight:1.5}}>{v}</div></div>
+              <div key={l}><div style={{fontSize:12,letterSpacing:1.5,textTransform:"uppercase",color:C.textFaint,fontFamily:F.body,fontWeight:300,marginBottom:6}}>{l}</div><div style={{fontSize:16,fontFamily:F.accent,fontWeight:400,color:C.text,lineHeight:1.5}}>{v}</div></div>
             ))}
           </div>
         </div>
@@ -1796,9 +1820,9 @@ function PresentationView({ property: p, lang, onInterest }) {
       {/* Features */}
       {feats.length>0 && (
         <div style={{padding:"16px 40px 36px"}}>
-          <div style={{fontSize:10,letterSpacing:3,textTransform:"uppercase",color:C.gold,fontFamily:F.body,fontWeight:300,marginBottom:16}}>{t.features}</div>
+          <div style={{fontSize:12,letterSpacing:3,textTransform:"uppercase",color:C.gold,fontFamily:F.body,fontWeight:300,marginBottom:16}}>{t.features}</div>
           <div style={{display:"flex",flexWrap:"wrap",gap:10}}>
-            {feats.map(f=><span key={f} style={{padding:"8px 18px",border:`1px solid rgba(196,164,112,0.25)`,fontSize:12,fontFamily:F.body,fontWeight:300,color:C.text}}>{f}</span>)}
+            {feats.map(f=><span key={f} style={{padding:"8px 18px",border:`1px solid rgba(196,164,112,0.25)`,fontSize:14,fontFamily:F.body,fontWeight:300,color:C.text}}>{f}</span>)}
           </div>
         </div>
       )}
@@ -1806,20 +1830,27 @@ function PresentationView({ property: p, lang, onInterest }) {
       {/* Floor plan */}
       {p.floorPlan?.length>0 && (
         <div style={{padding:"24px 40px",borderTop:`1px solid ${C.borderFaint}`}}>
-          <div style={{fontSize:10,letterSpacing:3,textTransform:"uppercase",color:C.gold,fontFamily:F.body,fontWeight:300,marginBottom:16}}>{t.floorPlanLabel}</div>
+          <div style={{fontSize:14,letterSpacing:3,textTransform:"uppercase",color:C.gold,fontFamily:F.body,fontWeight:300,marginBottom:16}}>{t.floorPlanLabel}</div>
           {p.floorPlan.map((img,i)=><img key={i} src={img.data} alt="" style={{width:"100%",maxWidth:700,borderRadius:6,opacity:0.92}} />)}
+        </div>
+      )}
+
+      {p.elevationDrawing?.length>0 && (
+        <div style={{padding:"24px 40px",borderTop:`1px solid ${C.borderFaint}`}}>
+          <div style={{fontSize:14,letterSpacing:3,textTransform:"uppercase",color:C.gold,fontFamily:F.body,fontWeight:300,marginBottom:16}}>{t.elevationLabel}</div>
+          {p.elevationDrawing.map((img,i)=><img key={i} src={img.data} alt="" style={{width:"100%",maxWidth:700,borderRadius:6,opacity:0.92}} />)}
         </div>
       )}
 
       {/* Units table */}
       {p.units?.length>0 && (
         <div style={{padding:"28px 40px",borderTop:`1px solid ${C.borderFaint}`}}>
-          <div style={{fontSize:10,letterSpacing:3,textTransform:"uppercase",color:C.gold,fontFamily:F.body,fontWeight:300,marginBottom:20}}>{t.unitTable}</div>
+          <div style={{fontSize:12,letterSpacing:3,textTransform:"uppercase",color:C.gold,fontFamily:F.body,fontWeight:300,marginBottom:20}}>{t.unitTable}</div>
           <div style={{overflowX:"auto"}}>
             <table style={{width:"100%",borderCollapse:"collapse",fontFamily:F.body}}>
               <thead>
                 <tr>{[t.unitNo,t.unitType,t.unitArea,t.unitPrice,t.unitFloor,t.unitView,t.unitStatus].map(h=>(
-                  <th key={h} style={{textAlign:"left",padding:"8px 12px",fontSize:9,letterSpacing:2,textTransform:"uppercase",color:C.textFaint,fontWeight:300,borderBottom:`1px solid ${C.border}`}}>{h}</th>
+                  <th key={h} style={{textAlign:"left",padding:"8px 12px",fontSize:11,letterSpacing:2,textTransform:"uppercase",color:C.textFaint,fontWeight:300,borderBottom:`1px solid ${C.border}`}}>{h}</th>
                 ))}</tr>
               </thead>
               <tbody>
@@ -1827,13 +1858,13 @@ function PresentationView({ property: p, lang, onInterest }) {
                   const sc = u.status==="available"?C.success:u.status==="reserved"?C.gold:C.danger;
                   const sl = u.status==="available"?t.available:u.status==="reserved"?t.reserved:t.sold;
                   return (<tr key={i} style={{borderBottom:`1px solid ${C.borderFaint}`}}>
-                    <td style={{padding:"10px 12px",fontSize:14,fontFamily:F.accent,fontWeight:500,color:C.white}}>{u.no}</td>
-                    <td style={{padding:"10px 12px",fontSize:13,fontWeight:300,color:C.text}}>{u.type}</td>
-                    <td style={{padding:"10px 12px",fontSize:13,fontWeight:300,color:C.text}}>{u.area}{u.area?" ㎡":""}</td>
-                    <td style={{padding:"10px 12px",fontSize:14,fontFamily:F.accent,fontWeight:600,color:C.gold}}>{u.price}</td>
-                    <td style={{padding:"10px 12px",fontSize:13,fontWeight:300,color:C.text}}>{u.floor}</td>
-                    <td style={{padding:"10px 12px",fontSize:13,fontWeight:300,color:C.textDim}}>{u.view}</td>
-                    <td style={{padding:"10px 12px"}}><span style={{padding:"3px 10px",borderRadius:3,fontSize:10,fontWeight:500,letterSpacing:1,color:sc,border:`1px solid ${sc}40`,background:`${sc}15`}}>{sl}</span></td>
+                    <td style={{padding:"10px 12px",fontSize:16,fontFamily:F.accent,fontWeight:500,color:C.white}}>{u.no}</td>
+                    <td style={{padding:"10px 12px",fontSize:15,fontWeight:300,color:C.text}}>{u.type}</td>
+                    <td style={{padding:"10px 12px",fontSize:15,fontWeight:300,color:C.text}}>{u.area}{u.area?" ㎡":""}</td>
+                    <td style={{padding:"10px 12px",fontSize:16,fontFamily:F.accent,fontWeight:600,color:C.gold}}>{u.price}</td>
+                    <td style={{padding:"10px 12px",fontSize:15,fontWeight:300,color:C.text}}>{u.floor}</td>
+                    <td style={{padding:"10px 12px",fontSize:15,fontWeight:300,color:C.textDim}}>{u.view}</td>
+                    <td style={{padding:"10px 12px"}}><span style={{padding:"3px 10px",borderRadius:3,fontSize:12,fontWeight:500,letterSpacing:1,color:sc,border:`1px solid ${sc}40`,background:`${sc}15`}}>{sl}</span></td>
                   </tr>);
                 })}
               </tbody>
@@ -1845,16 +1876,16 @@ function PresentationView({ property: p, lang, onInterest }) {
       {/* Timeline */}
       {p.type==="development" && p.timeline?.some(t=>t.name) && (
         <div style={{padding:"28px 40px 40px",borderTop:`1px solid ${C.borderFaint}`}}>
-          <div style={{fontSize:10,letterSpacing:3,textTransform:"uppercase",color:C.gold,fontFamily:F.body,fontWeight:300,marginBottom:24}}>{t.constructionTimeline}</div>
+          <div style={{fontSize:12,letterSpacing:3,textTransform:"uppercase",color:C.gold,fontFamily:F.body,fontWeight:300,marginBottom:24}}>{t.constructionTimeline}</div>
           <div style={{display:"flex",flexDirection:"column",gap:14}}>
             {p.timeline.filter(t=>t.name).map((phase,i)=>(
               <div key={i} style={{display:"flex",alignItems:"center",gap:16}}>
-                <div style={{width:150,fontSize:13,fontFamily:F.body,fontWeight:300,color:C.textDim}}>{phase.name}</div>
+                <div style={{width:150,fontSize:15,fontFamily:F.body,fontWeight:300,color:C.textDim}}>{phase.name}</div>
                 <div style={{flex:1,height:4,background:"rgba(196,164,112,0.1)",position:"relative",borderRadius:2}}>
                   <div style={{position:"absolute",left:0,top:0,height:"100%",width:`${phase.progress||0}%`,background:`linear-gradient(90deg,${C.gold},${C.goldDark})`,borderRadius:2}} />
                 </div>
-                <div style={{width:50,textAlign:"center",fontSize:11,fontFamily:F.body,fontWeight:500,color:phase.progress>0?C.gold:C.textFaint}}>{phase.progress||0}%</div>
-                <div style={{width:90,textAlign:"right",fontSize:11,fontFamily:F.body,fontWeight:200,color:C.textFaint}}>{phase.start||"—"}</div>
+                <div style={{width:50,textAlign:"center",fontSize:13,fontFamily:F.body,fontWeight:500,color:phase.progress>0?C.gold:C.textFaint}}>{phase.progress||0}%</div>
+                <div style={{width:90,textAlign:"right",fontSize:13,fontFamily:F.body,fontWeight:200,color:C.textFaint}}>{phase.start||"—"}</div>
               </div>
             ))}
           </div>
@@ -1864,50 +1895,50 @@ function PresentationView({ property: p, lang, onInterest }) {
       {/* Agent */}
       {(p.agentName||p.companyName) && (
         <div style={{padding:"28px 40px",borderTop:`1px solid ${C.borderFaint}`,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:16}}>
-          <div>{p.companyName&&<div style={{fontSize:14,fontFamily:F.body,fontWeight:400,color:C.text,marginBottom:4}}>{p.companyName}</div>}
-            {p.agentName&&<div style={{fontSize:13,fontFamily:F.body,fontWeight:300,color:C.textDim}}>{p.agentName}{p.agentContact?` · ${p.agentContact}`:""}</div>}</div>
-          {p.licenseNo&&<div style={{fontSize:10,fontFamily:F.body,fontWeight:200,color:C.textFaint,letterSpacing:1}}>{p.licenseNo}</div>}
+          <div>{p.companyName&&<div style={{fontSize:16,fontFamily:F.body,fontWeight:400,color:C.text,marginBottom:4}}>{p.companyName}</div>}
+            {p.agentName&&<div style={{fontSize:15,fontFamily:F.body,fontWeight:300,color:C.textDim}}>{p.agentName}{p.agentContact?` · ${p.agentContact}`:""}</div>}</div>
+          {p.licenseNo&&<div style={{fontSize:12,fontFamily:F.body,fontWeight:200,color:C.textFaint,letterSpacing:1}}>{p.licenseNo}</div>}
         </div>
       )}
 
       {/* Interest CTA */}
       <div className="no-print" style={{padding:"36px 40px 48px",borderTop:`1px solid ${C.border}`,textAlign:"center"}}>
         {!interestOpen&&!submitted&&(
-          <><div onClick={()=>setInterestOpen(true)} style={{display:"inline-block",padding:"15px 52px",background:`linear-gradient(135deg,${C.gold},${C.goldDark})`,color:C.bg,fontSize:12,letterSpacing:3,textTransform:"uppercase",fontFamily:F.body,fontWeight:500,cursor:"pointer"}}>{t.registerInterest}</div>
-          <div style={{fontSize:12,fontFamily:F.body,fontWeight:200,color:C.textFaint,marginTop:12}}>{t.registerInterestDesc}</div></>
+          <><div onClick={()=>setInterestOpen(true)} style={{display:"inline-block",padding:"15px 52px",background:`linear-gradient(135deg,${C.gold},${C.goldDark})`,color:C.bg,fontSize:14,letterSpacing:3,textTransform:"uppercase",fontFamily:F.body,fontWeight:500,cursor:"pointer"}}>{t.registerInterest}</div>
+          <div style={{fontSize:14,fontFamily:F.body,fontWeight:200,color:C.textFaint,marginTop:12}}>{t.registerInterestDesc}</div></>
         )}
         {interestOpen&&!submitted&&(
           <div style={{maxWidth:500,margin:"0 auto",textAlign:"left"}}>
-            <div style={{fontSize:10,letterSpacing:3,textTransform:"uppercase",color:C.gold,fontFamily:F.body,fontWeight:300,marginBottom:20,textAlign:"center"}}>{t.registerInterest}</div>
+            <div style={{fontSize:12,letterSpacing:3,textTransform:"uppercase",color:C.gold,fontFamily:F.body,fontWeight:300,marginBottom:20,textAlign:"center"}}>{t.registerInterest}</div>
             {[[t.name,"name","text"],[t.email,"email","email"],[t.phone,"phone","tel"]].map(([l,k,tp])=>(
               <div key={k} style={{marginBottom:14}}>
-                <div style={{fontSize:10,letterSpacing:1.5,textTransform:"uppercase",color:C.textDim,fontFamily:F.body,fontWeight:300,marginBottom:4}}>{l} *</div>
+                <div style={{fontSize:12,letterSpacing:1.5,textTransform:"uppercase",color:C.textDim,fontFamily:F.body,fontWeight:300,marginBottom:4}}>{l} *</div>
                 <input type={tp} style={iS} value={form[k]} onChange={e=>setForm(f=>({...f,[k]:e.target.value}))} />
               </div>
             ))}
             <div style={{marginBottom:14}}>
-              <div style={{fontSize:10,letterSpacing:1.5,textTransform:"uppercase",color:C.textDim,fontFamily:F.body,fontWeight:300,marginBottom:4}}>{t.intendedUse}</div>
+              <div style={{fontSize:12,letterSpacing:1.5,textTransform:"uppercase",color:C.textDim,fontFamily:F.body,fontWeight:300,marginBottom:4}}>{t.intendedUse}</div>
               <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
                 {[["primaryResidence",t.primaryResidence],["vacationHome",t.vacationHome],["investment",t.investment],["rental",t.rentalUse]].map(([v,l])=>(
-                  <span key={v} onClick={()=>setForm(f=>({...f,use:v}))} style={{padding:"6px 16px",border:`1px solid ${form.use===v?C.gold:C.border}`,fontSize:12,fontFamily:F.body,fontWeight:300,color:form.use===v?C.gold:C.textDim,cursor:"pointer"}}>{l}</span>
+                  <span key={v} onClick={()=>setForm(f=>({...f,use:v}))} style={{padding:"6px 16px",border:`1px solid ${form.use===v?C.gold:C.border}`,fontSize:14,fontFamily:F.body,fontWeight:300,color:form.use===v?C.gold:C.textDim,cursor:"pointer"}}>{l}</span>
                 ))}
               </div>
             </div>
             <div style={{marginBottom:14}}>
-              <div style={{fontSize:10,letterSpacing:1.5,textTransform:"uppercase",color:C.textDim,fontFamily:F.body,fontWeight:300,marginBottom:4}}>{t.message}</div>
+              <div style={{fontSize:12,letterSpacing:1.5,textTransform:"uppercase",color:C.textDim,fontFamily:F.body,fontWeight:300,marginBottom:4}}>{t.message}</div>
               <textarea style={{...iS,minHeight:70,resize:"vertical"}} value={form.message} onChange={e=>setForm(f=>({...f,message:e.target.value}))} placeholder={t.messagePlaceholder} />
             </div>
             <label style={{display:"flex",gap:10,alignItems:"center",marginBottom:20,cursor:"pointer"}}>
               <input type="checkbox" checked={form.consent} onChange={e=>setForm(f=>({...f,consent:e.target.checked}))} />
-              <span style={{fontSize:12,fontFamily:F.body,fontWeight:300,color:C.textDim}}>{t.privacyConsent} *</span>
+              <span style={{fontSize:14,fontFamily:F.body,fontWeight:300,color:C.textDim}}>{t.privacyConsent} *</span>
             </label>
             <div style={{display:"flex",gap:12,justifyContent:"center"}}>
-              <div onClick={()=>setInterestOpen(false)} style={{padding:"12px 32px",border:`1px solid ${C.border}`,fontSize:12,fontFamily:F.body,fontWeight:300,color:C.textDim,cursor:"pointer"}}>{t.cancel}</div>
-              <div onClick={handleSubmit} style={{padding:"12px 40px",background:`linear-gradient(135deg,${C.gold},${C.goldDark})`,color:C.bg,fontSize:12,letterSpacing:2,textTransform:"uppercase",fontFamily:F.body,fontWeight:500,cursor:"pointer",opacity:(form.name&&form.email&&form.consent)?1:0.4}}>{t.submit}</div>
+              <div onClick={()=>setInterestOpen(false)} style={{padding:"12px 32px",border:`1px solid ${C.border}`,fontSize:14,fontFamily:F.body,fontWeight:300,color:C.textDim,cursor:"pointer"}}>{t.cancel}</div>
+              <div onClick={handleSubmit} style={{padding:"12px 40px",background:`linear-gradient(135deg,${C.gold},${C.goldDark})`,color:C.bg,fontSize:14,letterSpacing:2,textTransform:"uppercase",fontFamily:F.body,fontWeight:500,cursor:"pointer",opacity:(form.name&&form.email&&form.consent)?1:0.4}}>{t.submit}</div>
             </div>
           </div>
         )}
-        {submitted&&(<div><div style={{fontSize:28,marginBottom:12}}>✓</div><div style={{fontSize:20,fontFamily:F.accent,fontWeight:500,color:C.gold,marginBottom:8}}>{t.thankYou}</div><div style={{fontSize:14,fontFamily:F.body,fontWeight:300,color:C.textDim}}>{t.thankYouDesc}</div></div>)}
+        {submitted&&(<div><div style={{fontSize:30,marginBottom:12}}>✓</div><div style={{fontSize:22,fontFamily:F.accent,fontWeight:500,color:C.gold,marginBottom:8}}>{t.thankYou}</div><div style={{fontSize:16,fontFamily:F.body,fontWeight:300,color:C.textDim}}>{t.thankYouDesc}</div></div>)}
       </div>
     </div>
   );
@@ -1936,10 +1967,10 @@ function PropertyEditor({ property, onChange, t, lang }) {
   return (<div>
     {/* Type selector */}
     <div style={{marginBottom:24}}>
-      <div style={{fontSize:10,letterSpacing:2,textTransform:"uppercase",color:C.gold,fontFamily:F.body,fontWeight:300,marginBottom:10}}>{t.propertyType}</div>
+      <div style={{fontSize:12,letterSpacing:2,textTransform:"uppercase",color:C.gold,fontFamily:F.body,fontWeight:300,marginBottom:10}}>{t.propertyType}</div>
       <div style={{display:"flex",gap:10}}>
         {[["development",t.development],["resale",t.resale],["building",t.building],["rental",t.rental]].map(([v,l])=>(
-          <div key={v} onClick={()=>set("type",v)} style={{padding:"10px 24px",border:`1px solid ${p.type===v?C.gold:C.border}`,borderRadius:6,fontSize:13,fontFamily:F.body,fontWeight:p.type===v?500:300,color:p.type===v?C.gold:C.textDim,cursor:"pointer",background:p.type===v?"rgba(196,164,112,0.08)":"transparent"}}>{l}</div>
+          <div key={v} onClick={()=>set("type",v)} style={{padding:"10px 24px",border:`1px solid ${p.type===v?C.gold:C.border}`,borderRadius:6,fontSize:15,fontFamily:F.body,fontWeight:p.type===v?500:300,color:p.type===v?C.gold:C.textDim,cursor:"pointer",background:p.type===v?"rgba(196,164,112,0.08)":"transparent"}}>{l}</div>
         ))}
       </div>
     </div>
@@ -1947,7 +1978,7 @@ function PropertyEditor({ property, onChange, t, lang }) {
     {/* Tabs */}
     <div style={{display:"flex",gap:4,marginBottom:24,borderBottom:`1px solid ${C.border}`,flexWrap:"wrap"}}>
       {tabs.map(([k,l])=>(
-        <div key={k} onClick={()=>setTab(k)} style={{padding:"10px 18px",fontSize:12,fontFamily:F.body,fontWeight:tab===k?500:300,color:tab===k?C.gold:C.textDim,cursor:"pointer",borderBottom:tab===k?`2px solid ${C.gold}`:"2px solid transparent",letterSpacing:0.5}}>{l}</div>
+        <div key={k} onClick={()=>setTab(k)} style={{padding:"10px 18px",fontSize:14,fontFamily:F.body,fontWeight:tab===k?500:300,color:tab===k?C.gold:C.textDim,cursor:"pointer",borderBottom:tab===k?`2px solid ${C.gold}`:"2px solid transparent",letterSpacing:0.5}}>{l}</div>
       ))}
     </div>
 
@@ -1960,14 +1991,14 @@ function PropertyEditor({ property, onChange, t, lang }) {
       <TriField label={t.location} value={p.location} onChange={v=>set("location",v)} placeholder={t.locationPlaceholder} />
       <TriField label={t.description} value={p.description} onChange={v=>set("description",v)} placeholder={t.descriptionPlaceholder} textarea />
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
-        <Field label={t.landArea}><input style={iS} type="number" value={p.landArea} onChange={e=>set("landArea",e.target.value)} />{p.landArea&&<div style={{fontSize:11,color:C.textFaint,fontFamily:F.body,fontWeight:200,marginTop:4}}>= {sqmToTsubo(p.landArea)} {t.tsubo}</div>}</Field>
-        <Field label={t.buildingArea}><input style={iS} type="number" value={p.buildingArea} onChange={e=>set("buildingArea",e.target.value)} />{p.buildingArea&&<div style={{fontSize:11,color:C.textFaint,fontFamily:F.body,fontWeight:200,marginTop:4}}>= {sqmToTsubo(p.buildingArea)} {t.tsubo}</div>}</Field>
+        <Field label={t.landArea}><input style={iS} type="number" value={p.landArea} onChange={e=>set("landArea",e.target.value)} />{p.landArea&&<div style={{fontSize:13,color:C.textFaint,fontFamily:F.body,fontWeight:200,marginTop:4}}>= {sqmToTsubo(p.landArea)} {t.tsubo}</div>}</Field>
+        <Field label={t.buildingArea}><input style={iS} type="number" value={p.buildingArea} onChange={e=>set("buildingArea",e.target.value)} />{p.buildingArea&&<div style={{fontSize:13,color:C.textFaint,fontFamily:F.body,fontWeight:200,marginTop:4}}>= {sqmToTsubo(p.buildingArea)} {t.tsubo}</div>}</Field>
       </div>
       {isBuilding && (
         <Field label={t.buildingCategory}>
           <div style={{display:"flex",gap:8}}>
             {[["residential",t.catResidential],["retail",t.catRetail],["office",t.catOffice],["mixed",t.catMixed]].map(([v,l])=>(
-              <div key={v} onClick={()=>set("buildingCategory",v)} style={{padding:"8px 20px",border:`1px solid ${p.buildingCategory===v?C.gold:C.border}`,borderRadius:4,fontSize:12,fontFamily:F.body,fontWeight:p.buildingCategory===v?500:300,color:p.buildingCategory===v?C.gold:C.textDim,cursor:"pointer",background:p.buildingCategory===v?"rgba(196,164,112,0.08)":"transparent"}}>{l}</div>
+              <div key={v} onClick={()=>set("buildingCategory",v)} style={{padding:"8px 20px",border:`1px solid ${p.buildingCategory===v?C.gold:C.border}`,borderRadius:4,fontSize:14,fontFamily:F.body,fontWeight:p.buildingCategory===v?500:300,color:p.buildingCategory===v?C.gold:C.textDim,cursor:"pointer",background:p.buildingCategory===v?"rgba(196,164,112,0.08)":"transparent"}}>{l}</div>
             ))}
           </div>
         </Field>
@@ -1988,24 +2019,25 @@ function PropertyEditor({ property, onChange, t, lang }) {
       <ImageUpload images={p.heroImages||[]} onChange={v=>set("heroImages",v)} label={t.heroImages} />
       <ImageUpload images={p.galleryImages||[]} onChange={v=>set("galleryImages",v)} label={t.galleryImages} />
       <ImageUpload images={p.floorPlan||[]} onChange={v=>set("floorPlan",v)} label={t.floorPlan} />
+      <ImageUpload images={p.elevationDrawing||[]} onChange={v=>set("elevationDrawing",v)} label={t.elevationDrawing} />
     </div>)}
 
     {tab==="details"&&(<div>
-      <Field label={t.structure}><select style={selS} value={p.structure} onChange={e=>set("structure",e.target.value)}><option value="">—</option>{STRUCTURES.map(s=><option key={s} value={s}>{s}</option>)}</select></Field>
-      <Field label={t.zoning}><select style={selS} value={p.zoning} onChange={e=>set("zoning",e.target.value)}><option value="">—</option>{ZONINGS.map(z=><option key={z} value={z}>{z}</option>)}</select></Field>
+      <Field label={t.structure}><select style={selS} value={p.structure} onChange={e=>set("structure",e.target.value)}><option value="">—</option>{STRUCTURES.map(s=><option key={s.en} value={s.en}>{lang==="ja"?`${s.ja}`:lang==="zh"?s.ja:`${s.en}`} </option>)}</select></Field>
+      <Field label={t.zoning}><select style={selS} value={p.zoning} onChange={e=>set("zoning",e.target.value)}><option value="">—</option>{ZONINGS.map(z=><option key={z.en} value={z.en}>{lang==="ja"?`${z.ja}`:lang==="zh"?z.ja:`${z.en}`}</option>)}</select></Field>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
         <Field label={t.coverageRatio}><input style={iS} type="number" value={p.coverageRatio} onChange={e=>set("coverageRatio",e.target.value)} /></Field>
         <Field label={t.floorAreaRatio}><input style={iS} type="number" value={p.floorAreaRatio} onChange={e=>set("floorAreaRatio",e.target.value)} /></Field>
       </div>
       <Field label={t.currentStatus}><select style={selS} value={p.currentStatus} onChange={e=>set("currentStatus",e.target.value)}><option value="">—</option>{STATUSES_PROP.map(s=><option key={s} value={s}>{s}</option>)}</select></Field>
       <div style={{marginTop:8,padding:"20px 0",borderTop:`1px solid ${C.borderFaint}`}}>
-        <div style={{fontSize:10,letterSpacing:2,textTransform:"uppercase",color:C.gold,fontFamily:F.body,fontWeight:300,marginBottom:16}}>{t.accessTitle}</div>
+        <div style={{fontSize:12,letterSpacing:2,textTransform:"uppercase",color:C.gold,fontFamily:F.body,fontWeight:300,marginBottom:16}}>{t.accessTitle}</div>
         <TriField label={t.nearestStation} value={p.nearestStation||{en:"",ja:"",zh:""}} onChange={v=>set("nearestStation",v)} placeholder={t.nearestStationPlaceholder} />
         <TriField label={t.nearestAttraction} value={p.nearestAttraction||{en:"",ja:"",zh:""}} onChange={v=>set("nearestAttraction",v)} placeholder={t.nearestAttractionPlaceholder} />
         <TriField label={t.airportAccess} value={p.airportAccess||{en:"",ja:"",zh:""}} onChange={v=>set("airportAccess",v)} placeholder={t.airportAccessPlaceholder} />
       </div>
       <div style={{marginTop:8,padding:"20px 0",borderTop:`1px solid ${C.borderFaint}`}}>
-        <div style={{fontSize:10,letterSpacing:2,textTransform:"uppercase",color:C.gold,fontFamily:F.body,fontWeight:300,marginBottom:16}}>{t.contactAgent}</div>
+        <div style={{fontSize:12,letterSpacing:2,textTransform:"uppercase",color:C.gold,fontFamily:F.body,fontWeight:300,marginBottom:16}}>{t.contactAgent}</div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
           <Field label={t.agentName}><input style={iS} value={p.agentName} onChange={e=>set("agentName",e.target.value)} /></Field>
           <Field label={t.agentContact}><input style={iS} value={p.agentContact} onChange={e=>set("agentContact",e.target.value)} /></Field>
@@ -2030,8 +2062,8 @@ function PropertyEditor({ property, onChange, t, lang }) {
       </div>
       <div style={{marginTop:8,padding:"20px 0",borderTop:`1px solid ${C.borderFaint}`}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
-          <div style={{fontSize:10,letterSpacing:2,textTransform:"uppercase",color:C.gold,fontFamily:F.body,fontWeight:300}}>{t.timeline}</div>
-          <div onClick={()=>set("timeline",[...(p.timeline||[]),{name:"",start:"",end:"",progress:0}])} style={{fontSize:11,fontFamily:F.body,fontWeight:400,color:C.gold,cursor:"pointer"}}>+ {t.addPhase}</div>
+          <div style={{fontSize:12,letterSpacing:2,textTransform:"uppercase",color:C.gold,fontFamily:F.body,fontWeight:300}}>{t.timeline}</div>
+          <div onClick={()=>set("timeline",[...(p.timeline||[]),{name:"",start:"",end:"",progress:0}])} style={{fontSize:13,fontFamily:F.body,fontWeight:400,color:C.gold,cursor:"pointer"}}>+ {t.addPhase}</div>
         </div>
         {(p.timeline||[]).map((phase,i)=>(
           <div key={i} style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr 80px 30px",gap:8,marginBottom:8,alignItems:"end"}}>
@@ -2039,7 +2071,7 @@ function PropertyEditor({ property, onChange, t, lang }) {
             <Field label={i===0?t.phaseStart:""}><input style={iS} value={phase.start} onChange={e=>{const tl=[...p.timeline];tl[i]={...tl[i],start:e.target.value};set("timeline",tl);}} placeholder="2025 Q1" /></Field>
             <Field label={i===0?t.phaseEnd:""}><input style={iS} value={phase.end} onChange={e=>{const tl=[...p.timeline];tl[i]={...tl[i],end:e.target.value};set("timeline",tl);}} placeholder="2025 Q2" /></Field>
             <Field label={i===0?"%":""}><input style={{...iS,textAlign:"center"}} type="number" min="0" max="100" value={phase.progress} onChange={e=>{const tl=[...p.timeline];tl[i]={...tl[i],progress:parseInt(e.target.value)||0};set("timeline",tl);}} /></Field>
-            <div onClick={()=>set("timeline",p.timeline.filter((_,j)=>j!==i))} style={{width:28,height:38,display:"flex",alignItems:"center",justifyContent:"center",color:C.danger,cursor:"pointer",fontSize:16,marginBottom:16}}>×</div>
+            <div onClick={()=>set("timeline",p.timeline.filter((_,j)=>j!==i))} style={{width:28,height:38,display:"flex",alignItems:"center",justifyContent:"center",color:C.danger,cursor:"pointer",fontSize:18,marginBottom:16}}>×</div>
           </div>
         ))}
       </div>
@@ -2051,8 +2083,8 @@ function PropertyEditor({ property, onChange, t, lang }) {
       {/* Floor breakdown editor */}
       <div style={{marginBottom:24}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
-          <div style={{fontSize:10,letterSpacing:2,textTransform:"uppercase",color:C.gold,fontFamily:F.body,fontWeight:300}}>{t.floorBreakdown}</div>
-          <div onClick={()=>set("floors",[...(p.floors||[]),{label:`${(p.floors||[]).length+1}F`,usage:p.buildingCategory==="office"?"Office":p.buildingCategory==="retail"?"Retail":"Residential",units:[{name:"",area:"",usage:""}]}])} style={{fontSize:11,fontFamily:F.body,fontWeight:400,color:C.gold,cursor:"pointer"}}>+ {t.addFloor}</div>
+          <div style={{fontSize:12,letterSpacing:2,textTransform:"uppercase",color:C.gold,fontFamily:F.body,fontWeight:300}}>{t.floorBreakdown}</div>
+          <div onClick={()=>set("floors",[...(p.floors||[]),{label:`${(p.floors||[]).length+1}F`,usage:p.buildingCategory==="office"?"Office":p.buildingCategory==="retail"?"Retail":"Residential",units:[{name:"",area:"",usage:""}]}])} style={{fontSize:13,fontFamily:F.body,fontWeight:400,color:C.gold,cursor:"pointer"}}>+ {t.addFloor}</div>
         </div>
         {(p.floors||[]).map((fl,fi)=>{
           const floorArea = (fl.units||[]).reduce((s,u) => s + (parseFloat(u.area)||0), 0);
@@ -2064,8 +2096,8 @@ function PropertyEditor({ property, onChange, t, lang }) {
             <div key={fi} style={{marginBottom:16,padding:16,background:"rgba(196,164,112,0.03)",border:`1px solid ${C.borderFaint}`,borderRadius:8}}>
               {/* Floor header */}
               <div style={{display:"flex",gap:10,alignItems:"center",marginBottom:12}}>
-                <input style={{...iS,padding:"6px 10px",fontSize:13,fontWeight:500,width:70,textAlign:"center",background:"rgba(196,164,112,0.08)",borderColor:C.gold+"40"}} value={fl.label} onChange={e=>updFloor("label",e.target.value)} placeholder="1F" />
-                <select style={{...selS,padding:"6px 10px",fontSize:12,flex:1}} value={fl.usage} onChange={e=>updFloor("usage",e.target.value)}>
+                <input style={{...iS,padding:"6px 10px",fontSize:15,fontWeight:500,width:70,textAlign:"center",background:"rgba(196,164,112,0.08)",borderColor:C.gold+"40"}} value={fl.label} onChange={e=>updFloor("label",e.target.value)} placeholder="1F" />
+                <select style={{...selS,padding:"6px 10px",fontSize:14,flex:1}} value={fl.usage} onChange={e=>updFloor("usage",e.target.value)}>
                   <option value="Residential">{t.catResidential}</option>
                   <option value="Retail">{t.catRetail}</option>
                   <option value="Office">{t.catOffice}</option>
@@ -2073,29 +2105,29 @@ function PropertyEditor({ property, onChange, t, lang }) {
                   <option value="Storage">Storage</option>
                   <option value="Common">Common Area</option>
                 </select>
-                <div style={{fontSize:12,fontFamily:F.accent,fontWeight:600,color:C.gold,whiteSpace:"nowrap"}}>{floorArea.toLocaleString()} ㎡</div>
-                <div style={{fontSize:10,fontFamily:F.body,fontWeight:200,color:C.textFaint,whiteSpace:"nowrap"}}>({(floorArea*SQM_TO_TSUBO).toFixed(1)} tsubo)</div>
-                <div onClick={()=>set("floors",p.floors.filter((_,j)=>j!==fi))} style={{color:C.danger,cursor:"pointer",fontSize:14,padding:"0 4px"}}>×</div>
+                <div style={{fontSize:14,fontFamily:F.accent,fontWeight:600,color:C.gold,whiteSpace:"nowrap"}}>{floorArea.toLocaleString()} ㎡</div>
+                <div style={{fontSize:12,fontFamily:F.body,fontWeight:200,color:C.textFaint,whiteSpace:"nowrap"}}>({(floorArea*SQM_TO_TSUBO).toFixed(1)} tsubo)</div>
+                <div onClick={()=>set("floors",p.floors.filter((_,j)=>j!==fi))} style={{color:C.danger,cursor:"pointer",fontSize:16,padding:"0 4px"}}>×</div>
               </div>
               {/* Units within floor */}
               {(fl.units||[]).length > 0 && (
                 <div style={{marginLeft:16}}>
                   {fi===0 || true ? (
                     <div style={{display:"grid",gridTemplateColumns:"100px 1fr 1fr 24px",gap:6,marginBottom:6}}>
-                      <div style={{fontSize:8,letterSpacing:1.5,textTransform:"uppercase",color:C.textFaint,fontFamily:F.body,fontWeight:300}}>{lang==="ja"?"号室":"Unit"}</div>
-                      <div style={{fontSize:8,letterSpacing:1.5,textTransform:"uppercase",color:C.textFaint,fontFamily:F.body,fontWeight:300}}>{lang==="ja"?"面積 (㎡)":"Area (㎡)"}</div>
-                      <div style={{fontSize:8,letterSpacing:1.5,textTransform:"uppercase",color:C.textFaint,fontFamily:F.body,fontWeight:300}}>{lang==="ja"?"用途":"Usage"}</div>
+                      <div style={{fontSize:10,letterSpacing:1.5,textTransform:"uppercase",color:C.textFaint,fontFamily:F.body,fontWeight:300}}>{lang==="ja"?"号室":"Unit"}</div>
+                      <div style={{fontSize:10,letterSpacing:1.5,textTransform:"uppercase",color:C.textFaint,fontFamily:F.body,fontWeight:300}}>{lang==="ja"?"面積 (㎡)":"Area (㎡)"}</div>
+                      <div style={{fontSize:10,letterSpacing:1.5,textTransform:"uppercase",color:C.textFaint,fontFamily:F.body,fontWeight:300}}>{lang==="ja"?"用途":"Usage"}</div>
                       <div></div>
                     </div>
                   ) : null}
                   {(fl.units||[]).map((u,ui)=>(
                     <div key={ui} style={{display:"grid",gridTemplateColumns:"100px 1fr 1fr 24px",gap:6,marginBottom:4}}>
-                      <input style={{...iS,padding:"5px 8px",fontSize:11}} value={u.name} onChange={e=>updUnit(ui,"name",e.target.value)} placeholder={`${fl.label}-${ui+1}`} />
+                      <input style={{...iS,padding:"5px 8px",fontSize:13}} value={u.name} onChange={e=>updUnit(ui,"name",e.target.value)} placeholder={`${fl.label}-${ui+1}`} />
                       <div>
-                        <input style={{...iS,padding:"5px 8px",fontSize:11}} type="number" value={u.area} onChange={e=>updUnit(ui,"area",e.target.value)} placeholder="㎡" />
-                        {u.area && <div style={{fontSize:9,color:C.textFaint,fontFamily:F.body,fontWeight:200,marginTop:1}}>= {sqmToTsubo(u.area)} tsubo</div>}
+                        <input style={{...iS,padding:"5px 8px",fontSize:13}} type="number" value={u.area} onChange={e=>updUnit(ui,"area",e.target.value)} placeholder="㎡" />
+                        {u.area && <div style={{fontSize:11,color:C.textFaint,fontFamily:F.body,fontWeight:200,marginTop:1}}>= {sqmToTsubo(u.area)} tsubo</div>}
                       </div>
-                      <select style={{...selS,padding:"5px 8px",fontSize:11}} value={u.usage||fl.usage} onChange={e=>updUnit(ui,"usage",e.target.value)}>
+                      <select style={{...selS,padding:"5px 8px",fontSize:13}} value={u.usage||fl.usage} onChange={e=>updUnit(ui,"usage",e.target.value)}>
                         <option value="Residential">{t.catResidential}</option>
                         <option value="Retail">{t.catRetail}</option>
                         <option value="Office">{t.catOffice}</option>
@@ -2103,12 +2135,12 @@ function PropertyEditor({ property, onChange, t, lang }) {
                         <option value="Storage">Storage</option>
                         <option value="Common">Common</option>
                       </select>
-                      <div onClick={()=>delUnit(ui)} style={{display:"flex",alignItems:"center",justifyContent:"center",color:C.danger,cursor:"pointer",fontSize:12,opacity:0.6}}>×</div>
+                      <div onClick={()=>delUnit(ui)} style={{display:"flex",alignItems:"center",justifyContent:"center",color:C.danger,cursor:"pointer",fontSize:14,opacity:0.6}}>×</div>
                     </div>
                   ))}
                 </div>
               )}
-              <div onClick={addUnit} style={{marginLeft:16,marginTop:8,fontSize:10,fontFamily:F.body,fontWeight:400,color:C.gold,cursor:"pointer",opacity:0.8}}>+ {lang==="ja"?"区画追加":"Add Unit"}</div>
+              <div onClick={addUnit} style={{marginLeft:16,marginTop:8,fontSize:12,fontFamily:F.body,fontWeight:400,color:C.gold,cursor:"pointer",opacity:0.8}}>+ {lang==="ja"?"区画追加":"Add Unit"}</div>
             </div>
           );
         })}
@@ -2117,30 +2149,30 @@ function PropertyEditor({ property, onChange, t, lang }) {
           const totalArea = (p.floors||[]).reduce((s,f) => s + (f.units||[]).reduce((s2,u) => s2 + (parseFloat(u.area)||0), 0), 0);
           const totalUnits = (p.floors||[]).reduce((s,f) => s + (f.units||[]).length, 0);
           return (<div style={{marginTop:12,padding:"12px 16px",background:"rgba(196,164,112,0.05)",borderRadius:6,display:"flex",gap:32}}>
-            <div><span style={{fontSize:10,color:C.textFaint,fontFamily:F.body,fontWeight:300}}>{t.grossFloorArea}: </span><span style={{fontSize:13,fontFamily:F.accent,fontWeight:600,color:C.gold}}>{totalArea.toLocaleString()} ㎡ ({(totalArea*SQM_TO_TSUBO).toFixed(1)} tsubo)</span></div>
-            <div><span style={{fontSize:10,color:C.textFaint,fontFamily:F.body,fontWeight:300}}>{t.totalBuildingUnits}: </span><span style={{fontSize:13,fontFamily:F.accent,fontWeight:600,color:C.gold}}>{totalUnits}</span></div>
+            <div><span style={{fontSize:12,color:C.textFaint,fontFamily:F.body,fontWeight:300}}>{t.grossFloorArea}: </span><span style={{fontSize:15,fontFamily:F.accent,fontWeight:600,color:C.gold}}>{totalArea.toLocaleString()} ㎡ ({(totalArea*SQM_TO_TSUBO).toFixed(1)} tsubo)</span></div>
+            <div><span style={{fontSize:12,color:C.textFaint,fontFamily:F.body,fontWeight:300}}>{t.totalBuildingUnits}: </span><span style={{fontSize:15,fontFamily:F.accent,fontWeight:600,color:C.gold}}>{totalUnits}</span></div>
           </div>);
         })()}
       </div>
 
       {/* Investment metrics */}
       <div style={{padding:"20px 0",borderTop:`1px solid ${C.borderFaint}`}}>
-        <div style={{fontSize:10,letterSpacing:2,textTransform:"uppercase",color:C.gold,fontFamily:F.body,fontWeight:300,marginBottom:16}}>{lang==="ja"?"投資指標":lang==="zh"?"投資指標":"Investment Metrics"}</div>
+        <div style={{fontSize:12,letterSpacing:2,textTransform:"uppercase",color:C.gold,fontFamily:F.body,fontWeight:300,marginBottom:16}}>{lang==="ja"?"投資指標":lang==="zh"?"投資指標":"Investment Metrics"}</div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
           <Field label={t.netLeasableArea}><input style={iS} type="number" value={p.netLeasableArea} onChange={e=>set("netLeasableArea",e.target.value)} /></Field>
           <Field label={t.occupancyRate}><input style={iS} type="number" value={p.occupancyRate} onChange={e=>set("occupancyRate",e.target.value)} /></Field>
         </div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
-          <Field label={t.annualIncome}><input style={iS} type="number" value={p.annualIncome} onChange={e=>set("annualIncome",e.target.value)} placeholder={t.annualIncomePlaceholder} />{p.annualIncome&&<div style={{fontSize:11,color:C.textFaint,fontFamily:F.body,fontWeight:200,marginTop:4}}>= ¥{parseInt(p.annualIncome).toLocaleString()}</div>}</Field>
-          <Field label={t.noi}><input style={iS} type="number" value={p.noi} onChange={e=>set("noi",e.target.value)} placeholder={t.noiPlaceholder} />{p.noi&&<div style={{fontSize:11,color:C.textFaint,fontFamily:F.body,fontWeight:200,marginTop:4}}>= ¥{parseInt(p.noi).toLocaleString()}</div>}</Field>
+          <Field label={t.annualIncome}><input style={iS} type="number" value={p.annualIncome} onChange={e=>set("annualIncome",e.target.value)} placeholder={t.annualIncomePlaceholder} />{p.annualIncome&&<div style={{fontSize:13,color:C.textFaint,fontFamily:F.body,fontWeight:200,marginTop:4}}>= ¥{parseInt(p.annualIncome).toLocaleString()}</div>}</Field>
+          <Field label={t.noi}><input style={iS} type="number" value={p.noi} onChange={e=>set("noi",e.target.value)} placeholder={t.noiPlaceholder} />{p.noi&&<div style={{fontSize:13,color:C.textFaint,fontFamily:F.body,fontWeight:200,marginTop:4}}>= ¥{parseInt(p.noi).toLocaleString()}</div>}</Field>
         </div>
-        <Field label={t.capRate}><input style={iS} type="number" step="0.1" value={p.capRate} onChange={e=>set("capRate",e.target.value)} />{p.capRate&&p.price&&<div style={{fontSize:11,color:C.textFaint,fontFamily:F.body,fontWeight:200,marginTop:4}}>Implied NOI @ {p.capRate}%: ¥{Math.round(parseInt(p.price)*(parseFloat(p.capRate)/100)).toLocaleString()}</div>}</Field>
+        <Field label={t.capRate}><input style={iS} type="number" step="0.1" value={p.capRate} onChange={e=>set("capRate",e.target.value)} />{p.capRate&&p.price&&<div style={{fontSize:13,color:C.textFaint,fontFamily:F.body,fontWeight:200,marginTop:4}}>Implied NOI @ {p.capRate}%: ¥{Math.round(parseInt(p.price)*(parseFloat(p.capRate)/100)).toLocaleString()}</div>}</Field>
       </div>
     </div>)}
 
     {tab==="rental"&&isRental&&(<div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
-        <Field label={t.monthlyRent}><input style={iS} type="number" value={p.monthlyRent} onChange={e=>set("monthlyRent",e.target.value)} placeholder={t.monthlyRentPlaceholder} />{p.monthlyRent&&<div style={{fontSize:11,color:C.textFaint,fontFamily:F.body,fontWeight:200,marginTop:4}}>= ¥{parseInt(p.monthlyRent).toLocaleString()} / month</div>}</Field>
+        <Field label={t.monthlyRent}><input style={iS} type="number" value={p.monthlyRent} onChange={e=>set("monthlyRent",e.target.value)} placeholder={t.monthlyRentPlaceholder} />{p.monthlyRent&&<div style={{fontSize:13,color:C.textFaint,fontFamily:F.body,fontWeight:200,marginTop:4}}>= ¥{parseInt(p.monthlyRent).toLocaleString()} / month</div>}</Field>
         <Field label={t.managementFee}><input style={iS} type="number" value={p.managementFee} onChange={e=>set("managementFee",e.target.value)} placeholder={t.managementFeePlaceholder} /></Field>
       </div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
@@ -2168,14 +2200,14 @@ function PropertyEditor({ property, onChange, t, lang }) {
 function InquiriesView({ inquiries, onUpdate, t }) {
   const sCol = {new:C.gold,contacted:C.success,followUp:"#c49a40",converted:C.blue};
   const sLbl = {new:t.new,contacted:t.contacted,followUp:t.followUp,converted:t.converted};
-  if(!inquiries.length) return <div style={{textAlign:"center",padding:"60px 20px"}}><div style={{fontSize:32,opacity:0.2,marginBottom:12}}>📋</div><div style={{fontSize:16,fontFamily:F.accent,color:C.textDim}}>{t.noInquiries}</div></div>;
+  if(!inquiries.length) return <div style={{textAlign:"center",padding:"60px 20px"}}><div style={{fontSize:34,opacity:0.2,marginBottom:12}}>📋</div><div style={{fontSize:18,fontFamily:F.accent,color:C.textDim}}>{t.noInquiries}</div></div>;
   return (<div>
-    <div style={{fontSize:10,letterSpacing:3,textTransform:"uppercase",color:C.gold,fontFamily:F.body,fontWeight:300,marginBottom:20}}>{t.allInquiries} ({inquiries.length})</div>
+    <div style={{fontSize:12,letterSpacing:3,textTransform:"uppercase",color:C.gold,fontFamily:F.body,fontWeight:300,marginBottom:20}}>{t.allInquiries} ({inquiries.length})</div>
     <div style={{display:"flex",flexDirection:"column",gap:10}}>
       {inquiries.map((inq,i)=>(<div key={i} style={{padding:"18px 22px",background:C.bgCard,borderRadius:8,border:`1px solid ${C.borderFaint}`,display:"grid",gridTemplateColumns:"1fr 1fr auto",gap:16,alignItems:"center"}}>
-        <div><div style={{fontSize:15,fontFamily:F.body,fontWeight:500,color:C.text,marginBottom:2}}>{inq.name}</div><div style={{fontSize:12,fontFamily:F.body,fontWeight:300,color:C.textDim}}>{inq.email}{inq.phone?` · ${inq.phone}`:""}</div>{inq.message&&<div style={{fontSize:12,fontFamily:F.body,fontWeight:200,color:C.textFaint,marginTop:6,fontStyle:"italic"}}>"{inq.message}"</div>}</div>
-        <div><div style={{fontSize:12,fontFamily:F.body,fontWeight:300,color:C.textDim}}>{inq.propertyName}</div><div style={{fontSize:11,fontFamily:F.body,fontWeight:200,color:C.textFaint}}>{new Date(inq.date).toLocaleDateString()}</div></div>
-        <select value={inq.status||"new"} onChange={e=>onUpdate(i,e.target.value)} style={{...selS,width:130,fontSize:11,padding:"6px 10px",color:sCol[inq.status||"new"],borderColor:sCol[inq.status||"new"]}}>
+        <div><div style={{fontSize:17,fontFamily:F.body,fontWeight:500,color:C.text,marginBottom:2}}>{inq.name}</div><div style={{fontSize:14,fontFamily:F.body,fontWeight:300,color:C.textDim}}>{inq.email}{inq.phone?` · ${inq.phone}`:""}</div>{inq.message&&<div style={{fontSize:14,fontFamily:F.body,fontWeight:200,color:C.textFaint,marginTop:6,fontStyle:"italic"}}>"{inq.message}"</div>}</div>
+        <div><div style={{fontSize:14,fontFamily:F.body,fontWeight:300,color:C.textDim}}>{inq.propertyName}</div><div style={{fontSize:13,fontFamily:F.body,fontWeight:200,color:C.textFaint}}>{new Date(inq.date).toLocaleDateString()}</div></div>
+        <select value={inq.status||"new"} onChange={e=>onUpdate(i,e.target.value)} style={{...selS,width:130,fontSize:13,padding:"6px 10px",color:sCol[inq.status||"new"],borderColor:sCol[inq.status||"new"]}}>
           {Object.entries(sLbl).map(([k,v])=><option key={k} value={k}>{v}</option>)}
         </select>
       </div>))}
@@ -2247,11 +2279,11 @@ export default function App() {
       <div style={{height:"100vh",display:"flex",flexDirection:"column",background:C.bg}}>
         <style>{FONT_IMPORT}{`@media print{.no-print{display:none!important}body{background:#0a0a0a!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}}`}</style>
         <div className="no-print" style={{padding:"10px 24px",background:C.bgLight,borderBottom:`1px solid ${C.border}`,display:"flex",alignItems:"center",gap:16,flexShrink:0}}>
-          <div onClick={()=>{setScreen("dashboard");setPreviewing(null);}} style={{fontSize:12,fontFamily:F.body,fontWeight:400,color:C.gold,cursor:"pointer"}}>← {t.back}</div>
+          <div onClick={()=>{setScreen("dashboard");setPreviewing(null);}} style={{fontSize:14,fontFamily:F.body,fontWeight:400,color:C.gold,cursor:"pointer"}}>← {t.back}</div>
           <div style={{flex:1}} />
           <div style={{display:"flex",gap:6}}>
             {[["en","EN"],["ja","日本語"],["zh","中文"]].map(([k,l])=>(
-              <div key={k} onClick={()=>setPreviewLang(k)} style={{padding:"5px 14px",fontSize:11,fontFamily:F.body,fontWeight:previewLang===k?500:300,color:previewLang===k?C.bg:C.textDim,background:previewLang===k?C.gold:"transparent",border:`1px solid ${previewLang===k?C.gold:C.border}`,borderRadius:4,cursor:"pointer"}}>{l}</div>
+              <div key={k} onClick={()=>setPreviewLang(k)} style={{padding:"5px 14px",fontSize:13,fontFamily:F.body,fontWeight:previewLang===k?500:300,color:previewLang===k?C.bg:C.textDim,background:previewLang===k?C.gold:"transparent",border:`1px solid ${previewLang===k?C.gold:C.border}`,borderRadius:4,cursor:"pointer"}}>{l}</div>
             ))}
           </div>
           <div style={{width:1,height:24,background:C.border,margin:"0 4px"}} />
@@ -2264,7 +2296,7 @@ export default function App() {
             w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${title}</title><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Cormorant+Garamond:wght@300;400;500;600&family=Outfit:wght@200;300;400;500;600&display=swap" rel="stylesheet"><style>*{margin:0;padding:0;box-sizing:border-box}body{background:#0d0b08}@page{size:A4;margin:0}@media print{body{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important}}</style></head><body>${el.outerHTML}</body></html>`);
             w.document.close();
             setTimeout(()=>{w.print();},800);
-          }} style={{padding:"5px 18px",fontSize:11,fontFamily:F.body,fontWeight:400,color:C.text,border:`1px solid ${C.border}`,borderRadius:4,cursor:"pointer"}}>{t.exportPdf}</div>
+          }} style={{padding:"5px 18px",fontSize:13,fontFamily:F.body,fontWeight:400,color:C.text,border:`1px solid ${C.border}`,borderRadius:4,cursor:"pointer"}}>{t.exportPdf}</div>
         </div>
         <div style={{flex:1,overflow:"auto"}}>
           <PresentationView property={previewing} lang={previewLang} onInterest={inq=>setInquiries(prev=>[{...inq,status:"new"},...prev])} />
@@ -2285,17 +2317,17 @@ export default function App() {
         </div>
         <div style={{padding:"16px 12px",flex:1}}>
           {[["dashboard",t.dashboard,"▦"],["inquiries",t.inquiries,"◈"],["analytics",t.analytics,"◎"]].map(([s,l,icon])=>(
-            <div key={s} onClick={()=>{setScreen(s);setEditing(null);}} style={{padding:"10px 12px",borderRadius:6,marginBottom:4,cursor:"pointer",background:screen===s?"rgba(196,164,112,0.1)":"transparent",color:screen===s?C.gold:C.textDim,fontSize:13,fontWeight:screen===s?500:300,display:"flex",alignItems:"center",gap:10}}>
-              <span style={{fontSize:14,opacity:0.7}}>{icon}</span> {l}
-              {s==="inquiries"&&inquiries.filter(i=>i.status==="new").length>0&&<span style={{marginLeft:"auto",background:C.gold,color:C.bg,fontSize:10,fontWeight:600,padding:"1px 7px",borderRadius:10}}>{inquiries.filter(i=>i.status==="new").length}</span>}
+            <div key={s} onClick={()=>{setScreen(s);setEditing(null);}} style={{padding:"10px 12px",borderRadius:6,marginBottom:4,cursor:"pointer",background:screen===s?"rgba(196,164,112,0.1)":"transparent",color:screen===s?C.gold:C.textDim,fontSize:15,fontWeight:screen===s?500:300,display:"flex",alignItems:"center",gap:10}}>
+              <span style={{fontSize:16,opacity:0.7}}>{icon}</span> {l}
+              {s==="inquiries"&&inquiries.filter(i=>i.status==="new").length>0&&<span style={{marginLeft:"auto",background:C.gold,color:C.bg,fontSize:12,fontWeight:600,padding:"1px 7px",borderRadius:10}}>{inquiries.filter(i=>i.status==="new").length}</span>}
             </div>
           ))}
         </div>
         <div style={{padding:"16px 24px",borderTop:`1px solid ${C.borderFaint}`}}>
-          <div style={{fontSize:9,letterSpacing:2,textTransform:"uppercase",color:C.textFaint,marginBottom:8}}>Interface</div>
+          <div style={{fontSize:11,letterSpacing:2,textTransform:"uppercase",color:C.textFaint,marginBottom:8}}>Interface</div>
           <div style={{display:"flex",gap:4}}>
             {[["en","EN"],["ja","JP"],["zh","中"]].map(([k,l])=>(
-              <div key={k} onClick={()=>setLang(k)} style={{flex:1,textAlign:"center",padding:"5px 0",fontSize:11,background:lang===k?C.gold:"transparent",color:lang===k?C.bg:C.textDim,border:`1px solid ${lang===k?C.gold:C.border}`,borderRadius:4,cursor:"pointer",fontWeight:lang===k?500:300}}>{l}</div>
+              <div key={k} onClick={()=>setLang(k)} style={{flex:1,textAlign:"center",padding:"5px 0",fontSize:13,background:lang===k?C.gold:"transparent",color:lang===k?C.bg:C.textDim,border:`1px solid ${lang===k?C.gold:C.border}`,borderRadius:4,cursor:"pointer",fontWeight:lang===k?500:300}}>{l}</div>
             ))}
           </div>
         </div>
@@ -2305,10 +2337,10 @@ export default function App() {
       <div style={{flex:1,overflow:"auto",padding:"28px 36px"}}>
         {screen==="dashboard"&&(<div>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:28}}>
-            <h2 style={{fontSize:22,fontFamily:F.display,fontWeight:600,color:C.white,margin:0}}>{t.dashboard}</h2>
-            <div onClick={()=>{setEditing(emptyProperty());setScreen("editor");}} style={{padding:"10px 24px",background:`linear-gradient(135deg,${C.gold},${C.goldDark})`,color:C.bg,fontSize:12,fontFamily:F.body,fontWeight:500,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer",borderRadius:4}}>+ {t.newProperty}</div>
+            <h2 style={{fontSize:24,fontFamily:F.display,fontWeight:600,color:C.white,margin:0}}>{t.dashboard}</h2>
+            <div onClick={()=>{setEditing(emptyProperty());setScreen("editor");}} style={{padding:"10px 24px",background:`linear-gradient(135deg,${C.gold},${C.goldDark})`,color:C.bg,fontSize:14,fontFamily:F.body,fontWeight:500,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer",borderRadius:4}}>+ {t.newProperty}</div>
           </div>
-          {properties.length===0?(<div style={{textAlign:"center",padding:"80px 20px"}}><CMPLogo width={100} fill={C.text} style={{display:"inline-block",opacity:0.15,marginBottom:16}} /><div style={{fontSize:18,fontFamily:F.accent,color:C.textDim,marginBottom:8}}>{t.noProperties}</div><div style={{fontSize:13,fontFamily:F.body,fontWeight:200,color:C.textFaint}}>{t.noPropertiesDesc}</div></div>)
+          {properties.length===0?(<div style={{textAlign:"center",padding:"80px 20px"}}><CMPLogo width={100} fill={C.text} style={{display:"inline-block",opacity:0.15,marginBottom:16}} /><div style={{fontSize:20,fontFamily:F.accent,color:C.textDim,marginBottom:8}}>{t.noProperties}</div><div style={{fontSize:15,fontFamily:F.body,fontWeight:200,color:C.textFaint}}>{t.noPropertiesDesc}</div></div>)
           :(<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:16}}>
             {properties.map(p=>{
               const nm=getLangVal(p.name,lang)||"Untitled";
@@ -2322,23 +2354,23 @@ export default function App() {
                 <div style={{height:160,background:hero?`url(${hero}) center/cover`:`linear-gradient(135deg,${C.bgCard},${C.bgLight})`,position:"relative"}}>
                   {hero&&<div style={{position:"absolute",inset:0,background:"linear-gradient(to top,rgba(26,23,20,0.8),transparent)"}} />}
                   <div style={{position:"absolute",top:12,right:12,display:"flex",gap:6}}>
-                    {p.password&&<span style={{padding:"3px 8px",background:"rgba(196,164,112,0.3)",borderRadius:3,fontSize:9,fontFamily:F.body,fontWeight:500,letterSpacing:1,color:"#fff"}}>🔒</span>}
-                    <span style={{padding:"3px 10px",background:C.bgCard+"cc",borderRadius:3,fontSize:9,fontFamily:F.body,fontWeight:500,letterSpacing:1,textTransform:"uppercase",color:C.textDim}}>{typeStr}</span>
+                    {p.password&&<span style={{padding:"3px 8px",background:"rgba(196,164,112,0.3)",borderRadius:3,fontSize:11,fontFamily:F.body,fontWeight:500,letterSpacing:1,color:"#fff"}}>🔒</span>}
+                    <span style={{padding:"3px 10px",background:C.bgCard+"cc",borderRadius:3,fontSize:11,fontFamily:F.body,fontWeight:500,letterSpacing:1,textTransform:"uppercase",color:C.textDim}}>{typeStr}</span>
                   </div>
-                  {viewCount>0&&<div style={{position:"absolute",top:12,left:12,padding:"3px 8px",background:"rgba(0,0,0,0.5)",borderRadius:3,fontSize:9,fontFamily:F.body,color:C.textDim}}>{viewCount} views</div>}
+                  {viewCount>0&&<div style={{position:"absolute",top:12,left:12,padding:"3px 8px",background:"rgba(0,0,0,0.5)",borderRadius:3,fontSize:11,fontFamily:F.body,color:C.textDim}}>{viewCount} views</div>}
                   <div style={{position:"absolute",bottom:14,left:16,zIndex:2}}>
-                    <div style={{fontSize:17,fontFamily:F.display,fontWeight:600,color:C.white}}>{nm}</div>
-                    {loc&&<div style={{fontSize:11,fontFamily:F.body,fontWeight:200,color:C.textDim,marginTop:2}}>{loc}</div>}
+                    <div style={{fontSize:19,fontFamily:F.display,fontWeight:600,color:C.white}}>{nm}</div>
+                    {loc&&<div style={{fontSize:13,fontFamily:F.body,fontWeight:200,color:C.textDim,marginTop:2}}>{loc}</div>}
                   </div>
                 </div>
                 <div style={{padding:"14px 16px"}}>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:12}}>
-                    <span style={{fontSize:18,fontFamily:F.accent,fontWeight:600,color:C.gold}}>{isR?`${fmtPrice(p.monthlyRent,"JPY")} /mo`:fmtPrice(p.price,p.currency)||"—"}</span>
+                    <span style={{fontSize:20,fontFamily:F.accent,fontWeight:600,color:C.gold}}>{isR?`${fmtPrice(p.monthlyRent,"JPY")} /mo`:fmtPrice(p.price,p.currency)||"—"}</span>
                   </div>
                   <div style={{display:"flex",gap:6}}>
-                    <div onClick={()=>{setEditing({...p});setScreen("editor");}} style={{flex:1,padding:"7px 0",textAlign:"center",border:`1px solid ${C.border}`,borderRadius:4,fontSize:11,fontFamily:F.body,fontWeight:400,color:C.textDim,cursor:"pointer"}}>{t.editProperty}</div>
-                    <div onClick={()=>handlePreview(p)} style={{flex:1,padding:"7px 0",textAlign:"center",background:"rgba(196,164,112,0.12)",border:`1px solid ${C.border}`,borderRadius:4,fontSize:11,fontFamily:F.body,fontWeight:500,color:C.gold,cursor:"pointer"}}>{t.preview}</div>
-                    <div onClick={()=>setProperties(properties.filter(x=>x.id!==p.id))} style={{padding:"7px 12px",border:"1px solid rgba(196,64,64,0.3)",borderRadius:4,fontSize:11,color:C.danger,cursor:"pointer"}}>×</div>
+                    <div onClick={()=>{setEditing({...p});setScreen("editor");}} style={{flex:1,padding:"7px 0",textAlign:"center",border:`1px solid ${C.border}`,borderRadius:4,fontSize:13,fontFamily:F.body,fontWeight:400,color:C.textDim,cursor:"pointer"}}>{t.editProperty}</div>
+                    <div onClick={()=>handlePreview(p)} style={{flex:1,padding:"7px 0",textAlign:"center",background:"rgba(196,164,112,0.12)",border:`1px solid ${C.border}`,borderRadius:4,fontSize:13,fontFamily:F.body,fontWeight:500,color:C.gold,cursor:"pointer"}}>{t.preview}</div>
+                    <div onClick={()=>setProperties(properties.filter(x=>x.id!==p.id))} style={{padding:"7px 12px",border:"1px solid rgba(196,64,64,0.3)",borderRadius:4,fontSize:13,color:C.danger,cursor:"pointer"}}>×</div>
                   </div>
                 </div>
               </div>);
@@ -2349,24 +2381,24 @@ export default function App() {
         {screen==="editor"&&editing&&(<div>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:24}}>
             <div style={{display:"flex",alignItems:"center",gap:16}}>
-              <div onClick={()=>{setScreen("dashboard");setEditing(null);}} style={{fontSize:12,fontFamily:F.body,fontWeight:400,color:C.gold,cursor:"pointer"}}>← {t.back}</div>
-              <h2 style={{fontSize:20,fontFamily:F.display,fontWeight:600,color:C.white,margin:0}}>{properties.find(p=>p.id===editing.id)?t.editProperty:t.newProperty}</h2>
+              <div onClick={()=>{setScreen("dashboard");setEditing(null);}} style={{fontSize:14,fontFamily:F.body,fontWeight:400,color:C.gold,cursor:"pointer"}}>← {t.back}</div>
+              <h2 style={{fontSize:22,fontFamily:F.display,fontWeight:600,color:C.white,margin:0}}>{properties.find(p=>p.id===editing.id)?t.editProperty:t.newProperty}</h2>
             </div>
             <div style={{display:"flex",gap:10}}>
-              <div onClick={()=>handlePreview(editing)} style={{padding:"9px 20px",border:`1px solid ${C.border}`,borderRadius:4,fontSize:12,fontFamily:F.body,fontWeight:400,color:C.textDim,cursor:"pointer"}}>{t.preview}</div>
-              <div onClick={saveProperty} style={{padding:"9px 28px",background:`linear-gradient(135deg,${C.gold},${C.goldDark})`,color:C.bg,fontSize:12,fontFamily:F.body,fontWeight:500,letterSpacing:1,textTransform:"uppercase",cursor:"pointer",borderRadius:4}}>{t.save}</div>
+              <div onClick={()=>handlePreview(editing)} style={{padding:"9px 20px",border:`1px solid ${C.border}`,borderRadius:4,fontSize:14,fontFamily:F.body,fontWeight:400,color:C.textDim,cursor:"pointer"}}>{t.preview}</div>
+              <div onClick={saveProperty} style={{padding:"9px 28px",background:`linear-gradient(135deg,${C.gold},${C.goldDark})`,color:C.bg,fontSize:14,fontFamily:F.body,fontWeight:500,letterSpacing:1,textTransform:"uppercase",cursor:"pointer",borderRadius:4}}>{t.save}</div>
             </div>
           </div>
           <div style={{maxWidth:760}}><PropertyEditor property={editing} onChange={setEditing} t={t} lang={lang} /></div>
         </div>)}
 
         {screen==="inquiries"&&(<div>
-          <h2 style={{fontSize:22,fontFamily:F.display,fontWeight:600,color:C.white,margin:"0 0 24px"}}>{t.inquiries}</h2>
+          <h2 style={{fontSize:24,fontFamily:F.display,fontWeight:600,color:C.white,margin:"0 0 24px"}}>{t.inquiries}</h2>
           <InquiriesView inquiries={inquiries} onUpdate={(i,s)=>{const u=[...inquiries];u[i]={...u[i],status:s};setInquiries(u);}} t={t} />
         </div>)}
 
         {screen==="analytics"&&(<div>
-          <h2 style={{fontSize:22,fontFamily:F.display,fontWeight:600,color:C.white,margin:"0 0 24px"}}>{t.analytics}</h2>
+          <h2 style={{fontSize:24,fontFamily:F.display,fontWeight:600,color:C.white,margin:"0 0 24px"}}>{t.analytics}</h2>
           <AnalyticsView properties={properties} t={t} />
         </div>)}
       </div>
